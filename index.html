@@ -273,7 +273,7 @@ const SEED=[
 const $=id=>document.getElementById(id);
 const aperti=new Set();let dati=[],sporco=false;const STORE={};let giorno=null;
 const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const iso=d=>d.toISOString().slice(0,10);
+const iso=d=>d.toLocaleDateString("sv-SE");
 
 function conto(){
   const oggi=new Date(),p=new Date("2027-04-23T00:00"),f=new Date("2027-05-03T23:59");
@@ -356,7 +356,7 @@ SEZ.contatti={k:"nome",vuoto:"Nessun contatto salvato.",nuovo:"Aggiungi contatto
 SEZ.scadenze={k:"scadenza",vuoto:"Nessuna scadenza salvata.",nuovo:"Aggiungi scadenza",
  campi:[["voce","Cosa fare","text"],["scadenza","Entro il","date"],["fatto","Fatto","chk"],["note","Note","area"]],
  tit:g=>(g.fatto?"✓ ":"○ ")+(g.voce||"Scadenza da inserire"),
- riga:g=>[g.scadenza?fmt(g.scadenza):"",g.fatto?"Fatto":(g.scadenza&&g.scadenza<new Date().toISOString().slice(0,10)?"In ritardo":"Da fare")].filter(Boolean).join(" · "),
+ riga:g=>[g.scadenza?fmt(g.scadenza):"",g.fatto?"Fatto":(g.scadenza&&g.scadenza<iso(new Date())?"In ritardo":"Da fare")].filter(Boolean).join(" · "),
  seed:[{"voce": "Controllare validità del passaporto", "scadenza": "2027-01-31", "note": "Verifica la validità richiesta per l'ingresso in Ecuador."}, {"voce": "Prenotare alberghi a Quito e a Puerto Ayora", "scadenza": "2027-01-31", "note": ""}, {"voce": "Verificare requisiti d'ingresso e sanitari", "scadenza": "2027-03-01", "note": "Consulta Viaggiare Sicuri."}, {"voce": "Prenotare escursioni (Seymour Norte, Bartolomé)", "scadenza": "2027-02-28", "note": "Spesso si può anche prenotare sul posto: confermare con l'operatore."}, {"voce": "Decidere su Isabela e prenotare barca e alloggio", "scadenza": "2027-02-28", "note": "Solo se scegli di inserirla."}, {"voce": "Stipulare l'assicurazione di viaggio", "scadenza": "2027-03-15", "note": "Controlla le condizioni di rimborso."}, {"voce": "Verificare importi di tassa del Parco e carta INGALA", "scadenza": "2027-04-10", "note": "Prepara contanti per entrambe."}, {"voce": "Cambiare o ritirare dollari USA in banconote piccole", "scadenza": "2027-04-15", "note": ""}, {"voce": "Scaricare le mappe offline di Quito e Puerto Ayora", "scadenza": "2027-04-20", "note": ""}, {"voce": "Salvare backup e PDF dell'itinerario", "scadenza": "2027-04-20", "note": "Dalla scheda Info."}, {"voce": "Check-in online dei voli e controllo degli orari", "scadenza": "2027-04-22", "note": ""}]};
 SEZ.diario={k:"data",vuoto:"Nessuna pagina di diario.",nuovo:"Aggiungi pagina",
  campi:[["data","Data","date"],["titolo","Titolo","text"],["testo","Com'è andata","area"]],
@@ -455,9 +455,9 @@ function prossimoEvento(){
   ep=(d,t,z)=>{const[y,mo,da]=d.split("-").map(Number),[h,mi]=(t||"00:00").split(":").map(Number);return Date.UTC(y,mo-1,da,h,mi)-OF[z](mo)*36e5},ev=[];
   (STORE.voli||[]).forEach(v=>{if(!v.data)return;const tr=v.tratta||"",z=/^(roma|italia)/i.test(tr)?"r":/^(baltra|puerto|gal)/i.test(tr)?"g":"q",ok=/^\d\d:\d\d$/.test(v.partenza||"");
     ev.push({t:ep(v.data,ok?v.partenza:"",z),i:"✈",n:tr||"Volo",d:v.data,h:ok?v.partenza:"",x:v.volo||"",g:!ok})});
-  (STORE.alberghi||[]).forEach(a=>{const n=(a.nome||"Albergo")+(a.localita?" — "+a.localita:"");
-    if(a.checkin)ev.push({t:ep(a.checkin,"15:00","q"),i:"🏨",n:"Check-in: "+n,d:a.checkin,g:true});
-    if(a.checkout)ev.push({t:ep(a.checkout,"11:00","q"),i:"🏨",n:"Check-out: "+n,d:a.checkout,g:true})});
+  (STORE.alberghi||[]).forEach(a=>{const n=(a.nome||"Albergo")+(a.localita?" — "+a.localita:""),z=/ayora|santa cruz|isabela|villamil|gal[aá]pagos|baltra/i.test(a.localita||"")?"g":"q";
+    if(a.checkin)ev.push({t:ep(a.checkin,"15:00",z),i:"🏨",n:"Check-in: "+n,d:a.checkin,g:true});
+    if(a.checkout)ev.push({t:ep(a.checkout,"11:00",z),i:"🏨",n:"Check-out: "+n,d:a.checkout,g:true})});
   const now=Date.now(),e=ev.filter(x=>x.t+(x.g?864e5:0)>now).sort((a,b)=>a.t-b.t)[0];
   if(!e)return"";
   const df=e.t-now,gg=Math.floor(df/864e5),hh=Math.floor((df%864e5)/36e5),
@@ -496,7 +496,7 @@ async function aggiungiSpesa(){
 function renderOggi(){
   const el=$("s-oggi");if(!el)return;
   const ae=document.activeElement;if(ae&&el.contains(ae)&&ae.matches("input,select,textarea")){pendO=true;return}
-  const hoy=new Date().toISOString().slice(0,10);
+  const hoy=iso(new Date());
   if(!giorno)giorno=hoy>=P&&hoy<=F?hoy:P;
   const g=(STORE.giorni||[]).find(x=>x.data===giorno);
   const voli=(STORE.voli||[]).filter(x=>x.data===giorno);
@@ -761,7 +761,7 @@ $("rf").onchange=async e=>{
   $("fsr").onclick=()=>setFs(16);
   ag();
 }
-const VER="20";$("ver").textContent=VER;
+const VER="21";$("ver").textContent=VER;
 $("upd").onclick=async()=>{try{for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister();for(const k of await caches.keys())await caches.delete(k)}catch(e){}location.reload()};
 {
   const el=$("s-album"),c=collection(db,"viaggi",CODE,"specie"),op=new Set(),MIL=[[5,"Esploratore"],[10,"Osservatore"],[20,"Naturalista"],[30,"Darwin"]];
