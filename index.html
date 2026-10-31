@@ -238,7 +238,7 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase
 import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,deleteDoc,getDocs,onSnapshot,writeBatch} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const app=initializeApp({apiKey:"AIzaSyDTzptxeE7uS4Cw-o0eCByhi7SErm6r0qM",authDomain:"galapagos-2027.firebaseapp.com",projectId:"galapagos-2027",storageBucket:"galapagos-2027.firebasestorage.app",messagingSenderId:"956902783176",appId:"1:956902783176:web:b91b5d0fd1833881844dfd"});
-const db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
+const db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager(),cacheSizeBytes:200*1024*1024})});
 const OK=/^[A-Za-z0-9_-]{16,60}$/;
 let CODE="";try{CODE=localStorage.getItem("codice")||""}catch(e){}
 if(!OK.test(CODE)){
@@ -845,7 +845,7 @@ $("rf").onchange=async e=>{
   $("fsr").onclick=()=>setFs(16);
   ag();
 }
-const VER="25";$("ver").textContent=VER;
+const VER="26";$("ver").textContent=VER;
 $("upd").onclick=async()=>{try{for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister();for(const k of await caches.keys())await caches.delete(k)}catch(e){}location.reload()};
 {
   const el=$("s-album"),c=collection(db,"viaggi",CODE,"specie"),op=new Set(),MIL=[[5,"Esploratore"],[10,"Osservatore"],[20,"Naturalista"],[30,"Darwin"]];
