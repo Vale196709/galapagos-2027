@@ -102,6 +102,14 @@ select{width:100%;margin-top:3px;padding:9px 10px;border:1px solid var(--line);b
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1A1F;--ink:#E4EEF0;--mute:#9DB3B8;--line:#2A3F46;--card:#16262C;--blue:#4C8DEB;--red:#E2735C;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#0E1A1F;--ink:#E4EEF0;--mute:#9DB3B8;--line:#2A3F46;--card:#16262C;--blue:#4C8DEB;--red:#E2735C;color-scheme:dark}
 :root[data-theme="light"]{color-scheme:light}
+.dg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin:8px 0 18px}
+.dg button{background:var(--card);color:var(--ink);border:1px solid var(--line);padding:6px;text-align:left;font-weight:400;font-size:.85rem;line-height:1.3}
+.dg img{width:100%;height:110px;object-fit:cover;border-radius:6px;display:block;margin-bottom:4px;background:var(--line)}
+#s-documenti h3{margin:20px 0 0;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mute)}
+#dview{position:fixed;inset:0;z-index:20;background:#000;overflow:auto;padding-bottom:env(safe-area-inset-bottom)}
+#dview .b{display:flex;flex-wrap:wrap;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 10px 10px;position:sticky;top:0;background:rgba(0,0,0,.85)}
+#dview .b b{flex:1 1 100%;color:#fff}#dview button{padding:8px 12px}#dview .x{background:#444}#dview .del{margin:0;border-color:#E2735C;color:#E2735C}
+#dview img{width:100%;display:block}
 .barra{height:10px;background:var(--line);border-radius:6px;overflow:hidden}.barra i{display:block;height:100%;background:var(--blue)}
 </style>
 </head>
@@ -111,7 +119,7 @@ select{width:100%;margin-top:3px;padding:9px 10px;border:1px solid var(--line);b
   <p class="sub">23 aprile – 3 maggio</p>
   <div class="bar"><span id="conto"></span><button class="lnk" id="cod" type="button">Codice</button><span id="stato"><i></i><span>Connessione…</span></span></div>
 </header>
-<nav id="tab"><button data-t="oggi" aria-selected="true">Oggi</button><button data-t="programma" aria-selected="false">Programma</button><button data-t="luoghi" aria-selected="false">Luoghi</button><button data-t="mappa" aria-selected="false">Mappa</button><button hidden data-t="voli" aria-selected="false">Voli</button><button hidden data-t="alberghi" aria-selected="false">Alberghi</button><button hidden data-t="prenotazioni" aria-selected="false">Prenotazioni</button><button hidden data-t="costi" aria-selected="false">Costi</button><button hidden data-t="checklist" aria-selected="false">Checklist</button><button hidden data-t="prepara" aria-selected="false">Prepara</button><button hidden data-t="info" aria-selected="false">Info</button><button hidden data-t="diario" aria-selected="false">Diario</button><button hidden data-t="album" aria-selected="false">Album</button><button data-t="altro" aria-selected="false">Altro</button></nav>
+<nav id="tab"><button data-t="oggi" aria-selected="true">Oggi</button><button data-t="programma" aria-selected="false">Programma</button><button data-t="luoghi" aria-selected="false">Luoghi</button><button data-t="mappa" aria-selected="false">Mappa</button><button hidden data-t="voli" aria-selected="false">Voli</button><button hidden data-t="alberghi" aria-selected="false">Alberghi</button><button hidden data-t="prenotazioni" aria-selected="false">Prenotazioni</button><button hidden data-t="documenti" aria-selected="false">Documenti</button><button hidden data-t="costi" aria-selected="false">Costi</button><button hidden data-t="checklist" aria-selected="false">Checklist</button><button hidden data-t="prepara" aria-selected="false">Prepara</button><button hidden data-t="info" aria-selected="false">Info</button><button hidden data-t="diario" aria-selected="false">Diario</button><button hidden data-t="album" aria-selected="false">Album</button><button data-t="altro" aria-selected="false">Altro</button></nav>
 <main>
 <section id="s-oggi" class="og"></section>
 <section id="s-programma" hidden><div id="lista" class="vuoto">Caricamento…</div></section>
@@ -148,12 +156,13 @@ select{width:100%;margin-top:3px;padding:9px 10px;border:1px solid var(--line);b
 </div>
 </section>
 <section id="s-diario" class="sec" hidden></section>
-<section id="s-altro" hidden><div class="menu"><button data-go="voli" type="button">Voli<small>Orari, codici e prenotazioni</small></button><button data-go="alberghi" type="button">Alberghi<small>Check-in, check-out e contatti</small></button><button data-go="prenotazioni" type="button">Prenotazioni ed escursioni<small>Escursioni, transfer e stato di ogni prenotazione</small></button><button data-go="costi" type="button">Costi<small>Spese e totale</small></button><button data-go="checklist" type="button">Checklist<small>Cose da fare e da portare</small></button><button data-go="prepara" type="button">Prepara<small>Scadenze, clima e valigia, contanti e mance</small></button><button data-go="info" type="button">Info<small>Contatti, orari, frasi, backup e calendario</small></button><button data-go="diario" type="button">Diario<small>Com'è andata, giorno per giorno</small></button><button data-go="album" type="button">Album delle specie<small>Avvistamenti e traguardi</small></button></div></section>
+<section id="s-altro" hidden><div class="menu"><button data-go="voli" type="button">Voli<small>Orari, codici e prenotazioni</small></button><button data-go="alberghi" type="button">Alberghi<small>Check-in, check-out e contatti</small></button><button data-go="prenotazioni" type="button">Prenotazioni ed escursioni<small>Escursioni, transfer e stato di ogni prenotazione</small></button><button data-go="documenti" type="button">Documenti<small>Passaporti, carte d'imbarco e voucher, anche offline</small></button><button data-go="costi" type="button">Costi<small>Spese e totale</small></button><button data-go="checklist" type="button">Checklist<small>Cose da fare e da portare</small></button><button data-go="prepara" type="button">Prepara<small>Scadenze, clima e valigia, contanti e mance</small></button><button data-go="info" type="button">Info<small>Contatti, orari, frasi, backup e calendario</small></button><button data-go="diario" type="button">Diario<small>Com'è andata, giorno per giorno</small></button><button data-go="album" type="button">Album delle specie<small>Avvistamenti e traguardi</small></button></div></section>
 <section id="s-album" class="sec" hidden></section>
 <section id="s-voli" class="sec" hidden></section>
 <section id="s-alberghi" class="sec" hidden></section>
 <section id="s-prenotazioni" class="sec" hidden><p class="nota" style="color:var(--mute);font-size:.85rem;margin:12px 0 0">Escursioni, transfer e traghetti. Lo stato di voli e alberghi si imposta nelle rispettive schede; i prezzi vanno nella scheda Costi.</p><div id="pren-l"></div></section>
 <section id="s-costi" class="sec" hidden></section>
+<section id="s-documenti" class="sec" hidden></section>
 <section id="s-checklist" class="sec" hidden></section>
 <section id="s-info" hidden>
 <h2>Contatti utili</h2><p class="nota">Tocca un contatto per modificarlo o chiamarlo. Completa i numeri prima di partire.</p>
@@ -701,7 +710,7 @@ LUOGHI.forEach(l=>{const x=EXTRA2[l.id];if(x){const i=l.s.findIndex(a=>a[0]==="D
 $("tab").addEventListener("click",e=>{
   const t=e.target.dataset.t;if(!t)return;
   document.querySelectorAll("#tab button").forEach(b=>b.setAttribute("aria-selected",b.dataset.t===t));
-  ["oggi","altro","album","programma","luoghi","mappa","prepara","diario","voli","alberghi","prenotazioni","costi","checklist","info"].forEach(n=>$("s-"+n).hidden=n!==t);
+  ["oggi","altro","album","programma","luoghi","mappa","prepara","diario","voli","alberghi","prenotazioni","documenti","costi","checklist","info"].forEach(n=>$("s-"+n).hidden=n!==t);
   scrollTo(0,0);
 });
 {const PINS=[{"id": "centro", "t": "Centro Storico di Quito", "g": "26 aprile", "a": "q", "p": [-0.2202, -78.5123]}, {"id": "teleferiqo", "t": "TelefériQo", "g": "24 aprile", "a": "q", "p": [-0.1925, -78.519]}, {"id": "mitad", "t": "Mitad del Mundo", "g": "24 aprile", "a": "q", "p": [-0.0022, -78.4558]}, {"id": "otavalo", "t": "Otavalo", "g": "25 aprile", "a": "q", "p": [0.2342, -78.2612]}, {"id": "ayora", "t": "Puerto Ayora e Stazione Darwin", "g": "27 aprile", "a": "g", "p": [-0.7436, -90.3028]}, {"id": "tortuga", "t": "Tortuga Bay", "g": "27 aprile", "a": "g", "p": [-0.766, -90.34]}, {"id": "seymour", "t": "Seymour Norte", "g": "28 aprile", "a": "g", "p": [-0.3985, -90.282]}, {"id": "bartolome", "t": "Bartolomé", "g": "29 aprile", "a": "g", "p": [-0.286, -90.547]}, {"id": "altopiano", "t": "Altopiano di Santa Cruz", "g": "30 aprile", "a": "g", "p": [-0.672, -90.326]}, {"id": "isabela", "t": "Isabela (Puerto Villamil)", "g": "Opzionale", "a": "g", "p": [-0.9553, -90.9657]}, {"id": "grietas", "t": "Las Grietas", "g": "Opzionale", "a": "g", "p": [-0.7505, -90.3105]}, {"id": "garrapatero", "t": "El Garrapatero", "g": "Opzionale", "a": "g", "p": [-0.6866, -90.2234]}, {"t": "Aeroporto di Quito", "a": "q", "x": 1, "p": [-0.1292, -78.3576]}, {"t": "Aeroporto di Baltra", "a": "g", "x": 1, "p": [-0.4538, -90.2659]}];
@@ -776,6 +785,36 @@ $("ics").onclick=async()=>{
     else tutto("p"+p.id,p.data,p.cosa||"Prenotazione",d)});
   await inviaFile(new File(["BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Galapagos 2027//IT\r\nCALSCALE:GREGORIAN\r\n"+out.join("\r\n")+"\r\nEND:VCALENDAR\r\n"],"galapagos-2027.ics",{type:"text/calendar"}));
 };
+{
+const el=$("s-documenti"),c=collection(db,"viaggi",CODE,"documenti"),CAT=["Passaporti e identità","Voli","Alberghi","Escursioni e transfer","Assicurazione","Altro"],MAX=850000;let dd=[];
+el.innerHTML=`<p class="m" style="color:var(--mute);font-size:.88rem">Fotografa o carica screenshot di passaporti, carte d'imbarco, voucher e polizza. Le immagini vengono ridotte, salvate nel database e restano consultabili offline su entrambi i telefoni. Per i PDF fai uno screenshot della pagina. Sono visibili a chiunque conosca il codice del viaggio: conservane comunque una copia sul telefono.</p>
+<label>Categoria<select id="dcat">${CAT.map(x=>`<option>${x}</option>`).join("")}</select></label>
+<label>Titolo (facoltativo)<input id="dtit" placeholder="Es. Carta d'imbarco Quito → Baltra"></label>
+<p><button id="dadd" type="button">Aggiungi foto o screenshot</button><input id="dfile" type="file" accept="image/*" multiple hidden></p><p class="m" id="dmsg" style="color:var(--mute)"></p><div id="dlist"></div>`;
+const comprimi=f=>new Promise((ok,ko)=>{const u=URL.createObjectURL(f),im=new Image();
+  im.onload=()=>{URL.revokeObjectURL(u);let lato=1800,q=.78;for(let i=0;i<10;i++){const k=Math.min(1,lato/Math.max(im.width,im.height)),cv=document.createElement("canvas");cv.width=Math.max(1,Math.round(im.width*k));cv.height=Math.max(1,Math.round(im.height*k));const x=cv.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,cv.width,cv.height);x.drawImage(im,0,0,cv.width,cv.height);const out=cv.toDataURL("image/jpeg",q);if(out.length<=MAX)return ok(out);if(q>.55)q-=.08;else lato=Math.round(lato*.8)}ko(new Error("immagine troppo grande"))};
+  im.onerror=()=>{URL.revokeObjectURL(u);ko(new Error("formato non supportato (per i PDF usa uno screenshot)"))};im.src=u});
+const draw=()=>{const L=$("dlist");if(!dd.length){L.innerHTML='<p class="vuoto">Nessun documento salvato.</p>';return}
+  L.innerHTML=CAT.map(k=>{const g=dd.filter(d=>(CAT.includes(d.cat)?d.cat:"Altro")===k);return g.length?`<h3>${k} (${g.length})</h3><div class="dg">${g.map(d=>`<button type="button" data-vd="${d.id}"><img src="${d.img}" alt="" loading="lazy">${esc(d.titolo||"Senza titolo")}</button>`).join("")}</div>`:""}).join("")};
+$("dadd").onclick=()=>$("dfile").click();
+$("dfile").onchange=async e=>{const fs=[...e.target.files],m=$("dmsg");if(!fs.length)return;let n=0;
+  for(const [i,f] of fs.entries()){m.textContent=`Elaboro ${i+1} di ${fs.length}…`;
+    try{const img=await comprimi(f),t=$("dtit").value.trim(),tit=t?(fs.length>1?`${t} (${i+1})`:t):f.name.replace(/\.[^.]+$/,"");
+      setDoc(doc(c,"d"+Date.now()+"_"+i),{titolo:tit,cat:$("dcat").value,img,creato:new Date().toISOString()}).catch(x=>{m.textContent="Salvataggio non riuscito: "+(x.code||x.message)});n++}
+    catch(x){m.textContent=`${f.name}: ${x.message}`;e.target.value="";return}}
+  m.textContent=n===1?"Documento aggiunto ✓":`${n} documenti aggiunti ✓`;$("dtit").value="";e.target.value=""};
+const chiudi=()=>{$("dview")?.remove();document.body.style.overflow=""};
+el.addEventListener("click",e=>{const b=e.target.closest("[data-vd]");if(!b)return;const d=dd.find(x=>x.id===b.dataset.vd);if(!d)return;
+  const v=document.createElement("div");v.id="dview";v.innerHTML=`<div class="b"><b>${esc(d.titolo||"Senza titolo")}</b><button class="x" data-a="c" type="button">Chiudi</button><button data-a="s" type="button">Condividi o salva</button><button class="x" data-a="r" type="button">Rinomina</button><button class="del" data-a="d" type="button">Elimina</button></div><img src="${d.img}" alt="">`;
+  document.body.appendChild(v);document.body.style.overflow="hidden";
+  v.addEventListener("click",async ev=>{const a=ev.target.closest("[data-a]")?.dataset.a;if(!a)return;
+    if(a==="c")chiudi();
+    else if(a==="s"){try{const bl=await (await fetch(d.img)).blob();await inviaFile(new File([bl],(d.titolo||"documento").replace(/[\\/:*?"<>|]/g,"_")+".jpg",{type:"image/jpeg"}))}catch(x){}}
+    else if(a==="r"){const t=prompt("Nuovo titolo",d.titolo||"");if(t!==null){setDoc(doc(c,d.id),{titolo:t.trim()},{merge:true});v.querySelector("b").textContent=t.trim()||"Senza titolo"}}
+    else if(a==="d"&&confirm("Eliminare questo documento da entrambi i telefoni?")){deleteDoc(doc(c,d.id));chiudi()}})});
+addEventListener("popstate",chiudi);
+onSnapshot(c,s=>{dd=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.titolo||"").localeCompare(b.titolo||""));draw()},e=>{$("dlist").innerHTML='<p class="vuoto">Errore di accesso ai dati: '+e.code+'</p>'});
+}
 const PRIM=["oggi","programma","luoghi","mappa","altro"];
 $("tab").addEventListener("click",e=>{const t=e.target.dataset.t;if(t&&!PRIM.includes(t))document.querySelector('#tab [data-t="altro"]').setAttribute("aria-selected","true")});
 $("s-altro").addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(b)document.querySelector('#tab [data-t="'+b.dataset.go+'"]').click()});
@@ -805,7 +844,7 @@ $("rf").onchange=async e=>{
   $("fsr").onclick=()=>setFs(16);
   ag();
 }
-const VER="23";$("ver").textContent=VER;
+const VER="24";$("ver").textContent=VER;
 $("upd").onclick=async()=>{try{for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister();for(const k of await caches.keys())await caches.delete(k)}catch(e){}location.reload()};
 {
   const el=$("s-album"),c=collection(db,"viaggi",CODE,"specie"),op=new Set(),MIL=[[5,"Esploratore"],[10,"Osservatore"],[20,"Naturalista"],[30,"Darwin"]];
