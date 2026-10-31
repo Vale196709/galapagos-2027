@@ -314,6 +314,13 @@ onSnapshot(col,{includeMetadataChanges:true},s=>{
 },e=>{$("lista").className="vuoto";$("lista").textContent="Errore di accesso ai dati: "+e.code});
 
 const fmt=d=>d?d.slice(8)+"/"+d.slice(5,7):"";
+const CAMBIO={};try{Object.assign(CAMBIO,JSON.parse(localStorage.getItem("cambio")||"{}"))}catch(e){}
+const salvaCambio=()=>{try{localStorage.setItem("cambio",JSON.stringify(CAMBIO))}catch(e){}SEZ.costi.draw?.();renderOggi()};
+async function caricaCambio(){
+  const oggi=new Date().toLocaleDateString("sv-SE");if(CAMBIO.m||CAMBIO.agg===oggi)return;
+  for(const u of ["https://api.frankfurter.dev/v1/latest?base=EUR&symbols=USD","https://api.frankfurter.app/latest?from=EUR&to=USD"]){
+    try{const j=await (await fetch(u)).json(),r=j?.rates?.USD;if(r>0){Object.assign(CAMBIO,{r,d:j.date||oggi,agg:oggi});salvaCambio();return}}catch(e){}
+  }}
 const STATI=["Da definire","Da prenotare","Prenotato","Pagato"],stb=g=>g.stato&&g.stato!=="Da definire"?g.stato:"";
 const SEZ={
 voli:{k:"data",vuoto:"Nessun volo salvato.",nuovo:"Aggiungi volo",
@@ -331,12 +338,15 @@ alberghi:{k:"checkin",vuoto:"Nessun albergo salvato.",nuovo:"Aggiungi albergo",
  riga:g=>[g.localita,(g.checkin||g.checkout)?`${fmt(g.checkin)||"?"} → ${fmt(g.checkout)||"?"}`:"",stb(g)].filter(Boolean).join(" · "),
  seed:[{localita:"Quito",checkin:"2027-04-23",checkout:"2027-04-27"},{localita:"Puerto Ayora (Santa Cruz)",checkin:"2027-04-27",checkout:"2027-05-01"},{localita:"Quito",checkin:"2027-05-01",checkout:"2027-05-02"}]},
 costi:{vuoto:"Nessuna spesa salvata.",nuovo:"Aggiungi spesa",
- campi:[["voce","Voce","text"],["importo","Importo","num"],["valuta","Valuta",["EUR","USD"]],["data","Data","date"],["pagato","Già pagato","chk"],["note","Note","area"]],
+ campi:[["voce","Voce","text"],["importo","Importo","num"],["valuta","Valuta",["EUR","USD"]],["data","Data","date"],["pagato","Già pagato","chk"],["contanti","Da pagare in contanti","chk"],["note","Note","area"]],
  tit:g=>g.voce||"Spesa da inserire",
- riga:g=>(g.importo===""||g.importo==null)?"Importo da inserire":`${g.importo} ${g.valuta==="USD"?"$":"€"}`+(g.pagato?" · pagato":""),
+ riga:g=>(g.importo===""||g.importo==null)?"Importo da inserire":`${g.importo} ${g.valuta==="USD"?"$":"€"}`+(g.valuta==="USD"&&CAMBIO.r?` (≈ ${(Number(g.importo)/CAMBIO.r).toLocaleString("it-IT",{maximumFractionDigits:0})} €)`:"")+(g.pagato?" · pagato":g.contanti?" · contanti":""),
  piede:d=>{const f=n=>n.toLocaleString("it-IT",{maximumFractionDigits:2}),sm=fn=>{const r={EUR:0,USD:0};d.forEach(g=>{if(fn(g))r[g.valuta==="USD"?"USD":"EUR"]+=Number(g.importo)||0});return r},
   fm=r=>[r.EUR&&`${f(r.EUR)} €`,r.USD&&`${f(r.USD)} $`].filter(Boolean).join(" + ")||"0 €",T=sm(()=>true),P=sm(g=>g.pagato),R={EUR:T.EUR-P.EUR,USD:T.USD-P.USD};
-  return d.length?`<div class="piede">Totale ${fm(T)}<span>Pagato ${fm(P)} · Da pagare ${fm(R)}</span></div>`:""},
+  const r=CAMBIO.r,eu=x=>x.EUR+(r?x.USD/r:0),fe=x=>r&&x.USD?` <span style="display:inline;color:var(--mute);font-weight:400">≈ ${f(Math.round(eu(x)))} € in tutto</span>`:"",
+  ct=d.filter(g=>g.contanti&&!g.pagato&&g.valuta==="USD").reduce((a,g)=>a+(Number(g.importo)||0),0),
+  cb=`<span>${r?`Cambio 1 € = ${r.toLocaleString("it-IT",{maximumFractionDigits:4})} $ (${CAMBIO.m?"inserito a mano":"BCE"}, ${fmt(CAMBIO.d)}/${(CAMBIO.d||"").slice(0,4)})`:"Cambio euro/dollaro non ancora disponibile"} <button type="button" class="lnk" style="color:var(--blue);border-color:var(--line)" data-cambio>Modifica</button></span>`;
+  return d.length?`<div class="piede">Totale ${fm(T)}${fe(T)}<span>Pagato ${fm(P)} · Da pagare ${fm(R)}${r&&R.USD?` (≈ ${f(Math.round(eu(R)))} €)`:""}</span>${ct?`<span>Contanti in dollari da portare: <b>${f(ct)} $</b> (voci "da pagare in contanti" non ancora pagate)</span>`:""}${cb}</div>`:""},
  seed:[{voce:"Volo Quito → Baltra",importo:129,note:"Avianca AV1688, circa 129 €. Da confermare se per persona."},{voce:"Voli Roma ⇄ Quito"},{voce:"Volo Baltra → Quito"},{voce:"Alberghi"},{voce:"Escursione Seymour Norte"},{voce:"Escursione Bartolomé"},{voce:"Tassa d'ingresso Parco Galápagos"},{voce:"Trasferimenti e traghetti"}]},
 checklist:{vuoto:"Nessuna voce salvata.",nuovo:"Aggiungi voce",
  campi:[["voce","Voce","text"],["fatto","Fatto","chk"],["note","Note","area"]],
@@ -380,6 +390,10 @@ SEZ.prenotazioni={k:"data",el:"pren-l",vuoto:"Nessuna prenotazione salvata.",nuo
  {cosa:"Altopiano: El Chato o Primicias",tipo:"Ingresso",data:"2027-04-30",pagamento:"Ingresso in contanti",note:"Si raggiunge in taxi da Puerto Ayora: concordare andata, attesa e ritorno."},
  {cosa:"Puerto Ayora → Baltra",tipo:"Transfer",data:"2027-05-01",note:"Servono circa 1–1,5 ore tra taxi, traghettino e bus: partire con largo margine sul volo."},
  {cosa:"Taxi albergo → aeroporto di Quito",tipo:"Transfer",data:"2027-05-02",note:"Volo IB138 alle 18:00: partire verso le 13:00–13:30."}]};
+$("s-costi").addEventListener("click",e=>{if(!e.target.closest("[data-cambio]"))return;
+  const v=prompt("Quanti dollari vale 1 euro? Lascia vuoto per tornare al cambio automatico della BCE.",CAMBIO.r?String(CAMBIO.r).replace(".",","):"");if(v===null)return;
+  const n=parseFloat(v.replace(",","."));if(v.trim()===""){delete CAMBIO.m;delete CAMBIO.agg;caricaCambio();salvaCambio()}else if(n>0.5&&n<2){Object.assign(CAMBIO,{r:n,m:1,d:new Date().toLocaleDateString("sv-SE")});salvaCambio()}else alert("Valore non valido: inserisci ad esempio 1,08.")});
+caricaCambio();
 const VAL=["Passaporto e copie dei documenti (anche in digitale)", "Assicurazione di viaggio con numero di assistenza", "Contanti in dollari USA, in banconote piccole", "Pile o felpa per la sera", "Giacca antipioggia", "Scarpe comode per le salite a 2.850 m", "Costume e abiti leggeri, meglio con maniche lunghe", "Cappello e occhiali da sole", "Scarpe da acqua e scarpe da trekking leggere", "Crema solare adatta alla vita marina", "Maschera e boccaglio", "Custodia stagna per il telefono", "Torcia o frontale", "Borraccia riutilizzabile", "Adattatore per prese americane (tipo A/B)", "Power bank", "Farmaci personali e kit di primo soccorso", "Pastiglie contro il mal di mare", "Repellente per insetti"];
 const campoHtml=([k,l,t],g)=>Array.isArray(t)?`<label>${l}<select data-k="${k}">${t.map(o=>`<option ${(g[k]||t[0])===o?"selected":""}>${o}</option>`).join("")}</select></label>`:t==="chk"?`<label class="ck"><input type="checkbox" data-k="${k}" ${g[k]?"checked":""}> ${l}</label>`:t==="num"?`<label>${l}<input type="number" inputmode="decimal" step="any" data-k="${k}" value="${g[k]??""}"></label>`:t==="area"?`<label>${l}<textarea data-k="${k}">${esc(g[k])}</textarea></label>`:`<label>${l}<input type="${t}" data-k="${k}" value="${esc(g[k])}"></label>`;
 for(const [nome,S] of Object.entries(SEZ)){
@@ -388,6 +402,7 @@ for(const [nome,S] of Object.entries(SEZ)){
   const draw=()=>{
     el.innerHTML=(S.piede?S.piede(dd):"")+(dd.length?dd.map(g=>`<details data-id="${g.id}" ${op.has(g.id)?"open":""}><summary>${esc(S.tit(g))}<span class="riga">${esc(S.riga(g))}</span></summary>${S.campi.map(f=>campoHtml(f,g)).join("")}${S.azioni?S.azioni(g):""}<button class="del" data-del="${g.id}">Elimina</button></details>`).join(""):`<p class="vuoto">${S.vuoto}</p><p class="vuoto"><button data-seed>Carica dall'itinerario</button></p>`)+`<p><button data-add>${S.nuovo}</button></p>`;
   };
+  S.draw=draw;
   el.addEventListener("toggle",e=>{const id=e.target.dataset?.id;if(id)e.target.open?op.add(id):op.delete(id)},true);
   el.addEventListener("change",e=>{const id=e.target.closest("details")?.dataset.id,k=e.target.dataset.k;if(id&&k){const t=e.target,v=t.type==="checkbox"?t.checked:t.type==="number"?(t.value===""?"":Number(t.value)):t.value;setDoc(doc(c,id),{[k]:v},{merge:true})}});
   el.addEventListener("click",async e=>{
@@ -500,7 +515,7 @@ let spOpen=false,spMsg="",pendO=false;
 function spese(){
   const hoy=new Date().toLocaleDateString("sv-SE"),f=n=>n.toLocaleString("it-IT",{maximumFractionDigits:2}),S={EUR:0,USD:0};
   (STORE.costi||[]).filter(c=>c.data===hoy).forEach(c=>{S[c.valuta==="USD"?"USD":"EUR"]+=Number(c.importo)||0});
-  const tot=[S.EUR&&`${f(S.EUR)} €`,S.USD&&`${f(S.USD)} $`].filter(Boolean).join(" + ")||"nessuna";
+  const tot=([S.EUR&&`${f(S.EUR)} €`,S.USD&&`${f(S.USD)} $`].filter(Boolean).join(" + ")||"nessuna")+(S.USD&&CAMBIO.r?` (≈ ${f(Math.round(S.EUR+S.USD/CAMBIO.r))} €)`:"");
   return `<div class="sec"><details data-sp ${spOpen?"open":""}><summary>Spese rapide<span class="riga">Oggi: ${tot}</span></summary>
 <label>Voce<input id="spv" placeholder="Es. pranzo, taxi, mance"></label>
 <label>Importo<input id="spi" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off"></label>
@@ -790,7 +805,7 @@ $("rf").onchange=async e=>{
   $("fsr").onclick=()=>setFs(16);
   ag();
 }
-const VER="22";$("ver").textContent=VER;
+const VER="23";$("ver").textContent=VER;
 $("upd").onclick=async()=>{try{for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister();for(const k of await caches.keys())await caches.delete(k)}catch(e){}location.reload()};
 {
   const el=$("s-album"),c=collection(db,"viaggi",CODE,"specie"),op=new Set(),MIL=[[5,"Esploratore"],[10,"Osservatore"],[20,"Naturalista"],[30,"Darwin"]];
