@@ -127,8 +127,9 @@ select{width:100%;margin-top:3px;padding:9px 10px;border:1px solid var(--line);b
 <section id="s-mappa" hidden>
 <div class="ar"><button data-ar="q" aria-pressed="true">Quito</button><button data-ar="g" aria-pressed="false">Galápagos</button></div>
 <div id="mappa"></div>
-<p id="mapmsg" class="m" hidden>La mappa richiede connessione e non è disponibile offline. Usa i link "Apri nella mappa" nelle schede dei luoghi o le mappe offline del telefono.</p>
+<p id="mapmsg" class="m" hidden>La mappa non è ancora stata aperta con la connessione, quindi non è disponibile offline. Usa i link "Apri nella mappa" nelle schede dei luoghi o le mappe offline del telefono.</p>
 <p class="m">Le posizioni dei pin sono indicative. Tocca un pin per aprire la scheda del luogo.</p>
+<p class="m">Offline restano visibili le zone già guardate con la connessione: prima di partire, con il Wi-Fi, apri Quito e Galápagos e ingrandisci le zone che vi interessano.</p>
 </section>
 <section id="s-prepara" hidden>
 <h2>Scadenze di prenotazione</h2><p class="nota">Date consigliate, modificabili: spesso le escursioni si prenotano anche sul posto, ma in alta stagione i posti possono finire.</p>
@@ -213,7 +214,7 @@ select{width:100%;margin-top:3px;padding:9px 10px;border:1px solid var(--line);b
 <details><summary>Usare l'app offline</summary><ul>
 <li>Apri l'app almeno una volta con la connessione e visita le schede che ti servono.</li>
 <li>Prima di partire prova la modalità aereo: schede e note restano disponibili e si sincronizzano quando torna la rete.</li>
-<li>Meteo e mappa richiedono la connessione.</li></ul></details>
+<li>Il meteo richiede la connessione. La mappa funziona offline solo per le zone già guardate: aprile con il Wi-Fi prima di partire, ingrandendo i luoghi del viaggio.</li><li>Anche i documenti sono disponibili offline, se l'app è stata aperta dopo averli caricati.</li></ul></details>
 <details><summary>Aggiornare l'app</summary><ul>
 <li>Dopo una modifica usa «Aggiorna app» in questa scheda e controlla il numero di versione.</li></ul></details>
 </div>
@@ -717,12 +718,12 @@ $("tab").addEventListener("click",e=>{
 let M=null,layer=null,area="q";
 const caricaL=cb=>{
   if(window.L)return cb();
-  const l=document.createElement("link");l.rel="stylesheet";l.href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";document.head.appendChild(l);
-  const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";sc.onload=cb;sc.onerror=()=>{$("mapmsg").hidden=false};document.head.appendChild(sc);
+  const l=document.createElement("link");l.rel="stylesheet";l.crossOrigin="anonymous";l.href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";document.head.appendChild(l);
+  const sc=document.createElement("script");sc.crossOrigin="anonymous";sc.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";sc.onload=cb;sc.onerror=()=>{$("mapmsg").hidden=false};document.head.appendChild(sc);
 };
 const mostra=()=>caricaL(()=>{
   $("mapmsg").hidden=true;
-  if(!M){M=L.map("mappa");L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:"© OpenStreetMap"}).addTo(M)}
+  if(!M){M=L.map("mappa");L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,crossOrigin:true,attribution:"© OpenStreetMap"}).addTo(M)}
   if(layer)layer.remove();layer=L.layerGroup().addTo(M);
   const pts=PINS.filter(p=>p.a===area);
   pts.forEach(p=>L.circleMarker(p.p,{radius:p.x?7:10,color:"#fff",weight:2,fillColor:p.x?"#C8553D":"#1E6FD9",fillOpacity:1}).addTo(layer).bindTooltip(p.t)
@@ -844,7 +845,7 @@ $("rf").onchange=async e=>{
   $("fsr").onclick=()=>setFs(16);
   ag();
 }
-const VER="24";$("ver").textContent=VER;
+const VER="25";$("ver").textContent=VER;
 $("upd").onclick=async()=>{try{for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister();for(const k of await caches.keys())await caches.delete(k)}catch(e){}location.reload()};
 {
   const el=$("s-album"),c=collection(db,"viaggi",CODE,"specie"),op=new Set(),MIL=[[5,"Esploratore"],[10,"Osservatore"],[20,"Naturalista"],[30,"Darwin"]];
