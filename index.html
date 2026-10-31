@@ -270,14 +270,14 @@ const col=collection(db,"viaggi",CODE,"giorni");
 
 const SEED=[
 ["2027-04-23","Volo per Quito","07:35 volo per Madrid, scalo di 1h50. Arrivo a Quito alle 16:10 dello stesso giorno."],
-["2027-04-24","Quito: TelefériQo e Mitad del Mundo","Mattina sul TelefériQo, quando il cielo è più limpido. Pomeriggio escursione alla Mitad del Mundo."],
-["2027-04-25","Otavalo","Escursione al mercato artigianale indigeno di Otavalo."],
-["2027-04-26","Centro Storico di Quito","Plaza Grande (Plaza de la Independencia), Chiesa della Compañía de Jesús (interni ricoperti d'oro) e complesso di San Francisco."],
-["2027-04-27","Volo a Baltra e Puerto Ayora","Avianca AV1688: Quito 09:15, Baltra 10:30 (circa 129 €). Trasferimento a Puerto Ayora (Santa Cruz). Pomeriggio: Tortuga Bay oppure Stazione Charles Darwin."],
+["2027-04-24","Otavalo: mercato del sabato","Gita in giornata a Otavalo (circa 2 ore di strada per tratta). Il sabato è il giorno del mercato più grande: Plaza de los Ponchos e bancarelle in tutte le vie del centro. Otavalo è più in basso di Quito (circa 2.550 m): buona giornata per abituarsi alla quota."],
+["2027-04-25","Centro Storico di Quito","Plaza Grande (Plaza de la Independencia), Chiesa della Compañía de Jesús (interni ricoperti d'oro) e complesso di San Francisco. Giornata tranquilla, a quota costante (2.850 m). Di domenica controllare gli orari di visita delle chiese."],
+["2027-04-26","Quito: TelefériQo e Mitad del Mundo","Mattina presto sul TelefériQo, quando il cielo è più limpido: si sale a circa 3.950 m, ora che il fisico è già un po' abituato alla quota. Pomeriggio alla Mitad del Mundo. È lunedì: controllare gli orari, alcuni musei sono chiusi."],
+["2027-04-27","Volo a Baltra, El Chato e Puerto Ayora","Avianca AV1688: Quito 09:15, Baltra 10:30 (circa 129 €). In aeroporto a Quito circa 2 ore prima per la carta INGALA e il controllo bagagli. Da Baltra taxi concordato con sosta a El Chato (tartarughe giganti e tunnel di lava), che è sulla strada per Puerto Ayora. Pomeriggio: Stazione Charles Darwin."],
 ["2027-04-28","Seymour Norte","Escursione in barca all'isola disabitata di Seymour Norte: corteggiamento delle fregate e sule dai piedi azzurri."],
 ["2027-04-29","Bartolomé","Escursione in giornata a Bartolomé: Pinnacle Rock e snorkeling guidato (pinguini, tartarughe, leoni marini)."],
-["2027-04-30","Tartarughe giganti e tunnel di lava","Entroterra di Santa Cruz (El Chato o Primicias): tartarughe giganti libere e tunnel di lava."],
-["2027-05-01","Rientro a Quito","Mattina al mercato del pesce di Puerto Ayora, poi Baltra. Avianca AV1683 (11:35, arrivo 16:10) o AV1631 (12:40, arrivo 17:15). LATAM LA1420 (10:45, arrivo 15:09) o LA1418 (13:14, arrivo 17:33)."],
+["2027-04-30","Tortuga Bay e Las Grietas","Giornata libera a Puerto Ayora, utile anche come riserva se un'escursione in barca slitta per il mare. Mattina a Tortuga Bay (iguane marine, piccoli squali, snorkeling a Playa Mansa), pomeriggio bagno a Las Grietas."],
+["2027-05-01","Rientro a Quito","Mattina al mercato del pesce di Puerto Ayora, poi Baltra (circa 1–1,5 ore tra taxi, traghettino e bus). Preferire i voli più tardi: Avianca AV1631 (12:40, arrivo 17:15) o LATAM LA1418 (13:14, arrivo 17:33). In alternativa AV1683 (11:35) o LA1420 (10:45), partendo da Puerto Ayora molto presto."],
 ["2027-05-02","Quito: ultimo giorno","Volo IB138 da Quito alle 18:00, scalo a Madrid di circa 2 ore."],
 ["2027-05-03","Arrivo a Roma","Arrivo a Roma Fiumicino (FCO) alle 15:30."]
 ];
@@ -295,7 +295,8 @@ function render(){
   const L=$("lista");
   if(!dati.length){L.className="vuoto";L.innerHTML='<p>Nessun giorno salvato.</p><button id="seed">Carica l\'itinerario iniziale</button>';$("seed").onclick=seed;return}
   L.className="";const oggi=iso(new Date());
-  L.innerHTML="<ol>"+dati.map(g=>{
+  const vecchio=dati.some(g=>g.data==="2027-04-24"&&/telef/i.test(g.titolo||""));
+  L.innerHTML=(vecchio?`<div class="blk r" style="margin:14px 0;padding:10px 0 10px 14px;border-left:3px solid var(--red)"><p style="margin:0 0 6px"><b>Itinerario ottimizzato disponibile</b></p><p class="m" style="margin:0 0 10px;color:var(--mute);font-size:.9rem">Otavalo il sabato 24 (giorno di mercato), Centro Storico il 25, TelefériQo il 26 dopo l'acclimatamento, El Chato sulla strada da Baltra il 27, Tortuga Bay e Las Grietas il 30 come giorno di riserva, voli di rientro più comodi il 1° maggio. Sostituisce titolo e programma di questi 6 giorni; alloggio, trasporti e note restano.</p><button type="button" data-ottimizza>Applica l'itinerario ottimizzato</button></div>`:"")+"<ol>"+dati.map(g=>{
     const dt=new Date(g.data+"T12:00");
     const gs=dt.toLocaleDateString("it-IT",{weekday:"short"}),m=dt.toLocaleDateString("it-IT",{month:"short"});
     return `<li class="${g.data===oggi?"oggi":""}"><div class="d"><b>${dt.getDate()}</b>${gs} ${m}</div>
@@ -310,6 +311,14 @@ async function seed(){
   SEED.forEach((s,i)=>b.set(doc(col,"g"+String(i+1).padStart(2,"0")),{data:s[0],titolo:s[1],attivita:s[2],alloggio:"",trasporti:"",note:""}));
   await b.commit();
 }
+$("lista").addEventListener("click",async e=>{if(!e.target.closest("[data-ottimizza]"))return;
+  if(!confirm("Aggiornare titolo e programma di 24, 25, 26, 27 e 30 aprile e 1° maggio? Eventuali modifiche fatte a mano a questi testi verranno sostituite."))return;
+  const N=Object.fromEntries(SEED.map(x=>[x[0],x])),D=["2027-04-24","2027-04-25","2027-04-26","2027-04-27","2027-04-30","2027-05-01"],b=writeBatch(db);
+  dati.filter(g=>D.includes(g.data)).forEach(g=>b.set(doc(col,g.id),{titolo:N[g.data][1],attivita:N[g.data][2]},{merge:true}));
+  (STORE.prenotazioni||[]).forEach(p=>{const c=doc(db,"viaggi",CODE,"prenotazioni",p.id);
+    if(/otavalo/i.test(p.cosa||"")&&p.data==="2027-04-25")b.set(c,{data:"2027-04-24",note:"Sabato, giorno del mercato più grande."},{merge:true});
+    if(/chato|primicias/i.test(p.cosa||"")&&p.data==="2027-04-30")b.set(c,{data:"2027-04-27",note:"Sosta sulla strada Baltra → Puerto Ayora: concordare con il taxi andata, attesa e proseguimento."},{merge:true})});
+  try{await b.commit()}catch(x){alert("Aggiornamento non riuscito: "+(x.code||x.message))}});
 $("lista").addEventListener("toggle",e=>{const id=e.target.dataset?.id;if(id)e.target.open?aperti.add(id):aperti.delete(id)},true);
 $("lista").addEventListener("change",e=>{
   const id=e.target.closest("details")?.dataset.id,k=e.target.dataset.k;
@@ -392,12 +401,12 @@ SEZ.prenotazioni={k:"data",el:"pren-l",vuoto:"Nessuna prenotazione salvata.",nuo
  azioni:g=>g.telefono?`<a class="call" href="tel:${esc(g.telefono.replace(/[^+\d]/g,""))}">Chiama ${esc(g.operatore||g.telefono)}</a>`:"",
  piede:d=>{if(!d.length)return"";const n=x=>d.filter(g=>(g.stato||"Da prenotare")===x).length;return `<div class="piede">${n("Da prenotare")} da prenotare · ${n("Prenotato")} prenotate · ${n("Pagato")} pagate</div>`},
  seed:[{cosa:"Taxi aeroporto di Quito → albergo",tipo:"Transfer",data:"2027-04-23",note:"Arrivo previsto alle 16:10. Chiedere all'albergo se offre il servizio."},
- {cosa:"Escursione a Otavalo",tipo:"Escursione",data:"2027-04-25",note:"Il mercato grande è il sabato (24 aprile): valutare lo scambio dei giorni."},
+ {cosa:"Escursione a Otavalo",tipo:"Escursione",data:"2027-04-24",note:"Sabato, giorno del mercato più grande."},
  {cosa:"Taxi albergo → aeroporto di Quito",tipo:"Transfer",data:"2027-04-27",note:"Volo AV1688 alle 09:15: in aeroporto circa 2 ore prima per carta INGALA e controllo bagagli."},
- {cosa:"Baltra → Puerto Ayora",tipo:"Transfer",data:"2027-04-27",ritrovo:"Aeroporto di Baltra",pagamento:"Contanti: bus, traghettino del canale Itabaca e taxi",note:"In alternativa taxi con sosta a El Chato (tartarughe giganti e tunnel di lava), che è sulla strada."},
+ {cosa:"Baltra → Puerto Ayora",tipo:"Transfer",data:"2027-04-27",ritrovo:"Aeroporto di Baltra",pagamento:"Contanti: bus, traghettino del canale Itabaca e taxi",note:"Taxi concordato con sosta a El Chato (tartarughe giganti e tunnel di lava), che è sulla strada."},
  {cosa:"Seymour Norte",tipo:"Escursione",data:"2027-04-28",note:"Posti limitati e partenze non tutti i giorni: prenotare presto. Prezzi indicativi 230–380 $."},
  {cosa:"Bartolomé",tipo:"Escursione",data:"2027-04-29",note:"Posti limitati e partenze non tutti i giorni: prenotare presto. Prezzi indicativi 245–380 $."},
- {cosa:"Altopiano: El Chato o Primicias",tipo:"Ingresso",data:"2027-04-30",pagamento:"Ingresso in contanti",note:"Si raggiunge in taxi da Puerto Ayora: concordare andata, attesa e ritorno."},
+ {cosa:"Altopiano: El Chato o Primicias",tipo:"Ingresso",data:"2027-04-27",pagamento:"Ingresso in contanti",note:"Sosta sulla strada Baltra → Puerto Ayora: concordare con il taxi andata, attesa e proseguimento."},
  {cosa:"Puerto Ayora → Baltra",tipo:"Transfer",data:"2027-05-01",note:"Servono circa 1–1,5 ore tra taxi, traghettino e bus: partire con largo margine sul volo."},
  {cosa:"Taxi albergo → aeroporto di Quito",tipo:"Transfer",data:"2027-05-02",note:"Volo IB138 alle 18:00: partire verso le 13:00–13:30."}]};
 $("s-costi").addEventListener("click",e=>{if(!e.target.closest("[data-cambio]"))return;
@@ -513,7 +522,7 @@ function rapidi(d){
   if(a)L.push(["Albergo: "+(a.nome||a.localita||"del giorno"),a.telefono]);
   (STORE.contatti||[]).filter(c=>c.telefono).slice(0,8).forEach(c=>L.push([c.nome||"Contatto",c.telefono]));
   return '<div class="sec"><details><summary>Contatti rapidi</summary>'+(L.length?L.map(([n,t])=>`<p><a class="call" href="tel:${esc(tel(t))}">Chiama ${esc(n)}</a> <span class="m">${esc(t)}</span></p>`).join(""):'<p class="m">Nessun numero salvato: aggiungili in Altro → Info → Contatti utili.</p>')+"</details></div>"}
-const GR=["Mammiferi", "Rettili", "Uccelli", "Mare", "Piante"],LN={"ayora": "Puerto Ayora", "tortuga": "Tortuga Bay", "seymour": "Seymour Norte", "bartolome": "Bartolomé", "altopiano": "Altopiano di Santa Cruz", "isabela": "Isabela", "grietas": "Las Grietas", "garrapatero": "El Garrapatero"},GL={"2027-04-27": ["ayora", "tortuga"], "2027-04-28": ["seymour"], "2027-04-29": ["bartolome"], "2027-04-30": ["altopiano", "grietas"], "2027-05-01": ["ayora"]};
+const GR=["Mammiferi", "Rettili", "Uccelli", "Mare", "Piante"],LN={"ayora": "Puerto Ayora", "tortuga": "Tortuga Bay", "seymour": "Seymour Norte", "bartolome": "Bartolomé", "altopiano": "Altopiano di Santa Cruz", "isabela": "Isabela", "grietas": "Las Grietas", "garrapatero": "El Garrapatero"},GL={"2027-04-27": ["ayora", "altopiano"], "2027-04-28": ["seymour"], "2027-04-29": ["bartolome"], "2027-04-30": ["tortuga", "grietas"], "2027-05-01": ["ayora"]};
 const SP=[["leone", "🦭", "Leone marino delle Galápagos", 0, "Dorme sulle spiagge e sui moli; curioso e rumoroso, va osservato a distanza.", ["ayora", "tortuga", "seymour", "bartolome", "isabela"]], ["otaria", "🦭", "Otaria orsina delle Galápagos", 0, "Più piccola e rara del leone marino, vive su coste rocciose.", []], ["delfino", "🐬", "Delfino tursiope", 0, "A volte accompagna le barche durante le traversate.", ["seymour", "bartolome"]], ["tartaruga", "🐢", "Tartaruga gigante", 1, "Simbolo dell'arcipelago: vive libera nell'altopiano e in allevamento alla Stazione Darwin.", ["altopiano", "ayora", "isabela"]], ["iguanamarina", "🦎", "Iguana marina", 1, "L'unica iguana al mondo che si nutre in mare; prende il sole sulle rocce di lava.", ["tortuga", "ayora", "isabela", "grietas"]], ["iguanaterr", "🦎", "Iguana terrestre", 1, "Gialla e vistosa, mangia cactus; a Seymour Norte è stata reintrodotta.", ["seymour"]], ["tartmarina", "🐢", "Tartaruga marina verde", 1, "Si incontra facendo snorkeling in baie e canali.", ["bartolome", "tortuga", "isabela"]], ["lucertola", "🦎", "Lucertola di lava", 1, "Piccola e comune, si vede su rocce e sentieri.", ["tortuga", "seymour", "ayora", "bartolome"]], ["sula", "🐦", "Sula dai piedi azzurri", 2, "Famosa per i piedi azzurri e per il corteggiamento a passi di danza.", ["seymour", "isabela"]], ["pellicano", "🐦", "Pellicano bruno", 2, "Si tuffa in mare dall'alto; frequente ai moli e nei porti.", ["ayora", "tortuga", "isabela"]], ["fregatam", "🦅", "Fregata magnifica", 2, "Il maschio gonfia un sacco rosso per corteggiare le femmine.", ["seymour", "ayora", "bartolome"]], ["fregatas", "🦅", "Fregata maestosa", 2, "Simile alla magnifica ma più grande, con riflessi verdi.", ["seymour"]], ["pinguino", "🐧", "Pinguino delle Galápagos", 2, "L'unico pinguino che vive vicino all'equatore.", ["bartolome", "isabela"]], ["cormorano", "🐦", "Cormorano atterrato", 2, "Non vola; è tipico di Isabela occidentale e Fernandina, quindi raro nel tuo itinerario.", []], ["fringuello", "🐦", "Fringuello di Darwin", 2, "Piccoli uccelli con becchi diversi, simbolo degli studi di Darwin.", ["ayora", "tortuga", "altopiano", "grietas"]], ["tordo", "🐦", "Tordo beffardo delle Galápagos", 2, "Curioso e poco timido, spesso si avvicina ai visitatori.", ["tortuga", "ayora"]], ["pigliamosche", "🐦", "Pigliamosche vermiglio", 2, "Piccolo, con il maschio rosso acceso; vive nell'altopiano umido.", ["altopiano", "ayora"]], ["gabbiano", "🐦", "Gabbiano a coda di rondine", 2, "L'unico gabbiano notturno, con grandi occhi scuri cerchiati di rosso.", ["seymour"]], ["airone", "🐦", "Airone lavico", 2, "Grigio scuro, caccia immobile lungo le coste rocciose.", ["ayora", "tortuga", "isabela"]], ["fenicottero", "🦩", "Fenicottero maggiore", 2, "Vive nelle lagune salmastre, dove cerca cibo filtrando l'acqua.", ["garrapatero", "isabela", "grietas"]], ["civetta", "🦉", "Civetta di campo", 2, "Rapace che caccia anche di giorno, nell'altopiano e nelle zone aperte.", ["altopiano"]], ["pinnabianca", "🦈", "Squalo pinna bianca", 3, "Riposa di giorno in canali e grotte, innocuo per chi lo osserva con rispetto.", ["bartolome", "isabela"]], ["pinnanera", "🦈", "Squalo pinna nera", 3, "Piccolo squalo che si vede nelle lagune di mangrovie.", ["tortuga", "ayora"]], ["razza", "🐟", "Razza aquila", 3, "Nuota con grazia in acque basse e vicino al fondo.", ["bartolome", "isabela"]], ["pesci", "🐠", "Pesci tropicali", 3, "Pesci pappagallo, pesci chirurgo e molti altri sulle scogliere.", ["bartolome", "tortuga", "isabela"]], ["granchio", "🦀", "Granchio rosso delle rocce", 3, "Rosso acceso, popola le rocce di lava vicino al mare.", ["ayora", "tortuga", "bartolome", "seymour", "isabela"]], ["cavalluccio", "🌊", "Cavalluccio marino", 3, "Difficile da notare: si cerca con calma tra le alghe.", ["isabela"]], ["opuntia", "🌵", "Cactus Opuntia gigante", 4, "Cactus alti come alberi, cibo principale di iguane e tartarughe.", ["ayora", "tortuga", "seymour"]], ["scalesia", "🌳", "Foresta di Scalesia", 4, "Albero endemico che forma boschi umidi nell'altopiano.", ["altopiano"]], ["mangrovie", "🌿", "Mangrovie", 4, "Radici nell'acqua salmastra, rifugio di pesci, piccoli squali e uccelli.", ["tortuga", "isabela", "ayora"]]];
 function specieOggi(d){
   const L=GL[d];if(!L)return"";
@@ -576,27 +585,27 @@ $("s-oggi").addEventListener("click",e=>{
   renderOggi()});
 renderOggi();
 const LUOGHI=[
-{id:"centro",t:"Centro Storico di Quito",z:"Quito",g:"26 aprile",q:"Centro Histórico de Quito",s:[
+{id:"centro",t:"Centro Storico di Quito",z:"Quito",g:"25 aprile",q:"Centro Histórico de Quito",s:[
 ["Cosa vedi",["Patrimonio UNESCO dal 1978, tra i centri coloniali meglio conservati dell'America Latina.","Plaza Grande con Palacio de Carondelet e Cattedrale; Chiesa della Compañía de Jesús (barocco, interni rivestiti d'oro); Convento e Plaza de San Francisco; Basilica del Voto Nacional (si salgono le torri); Calle La Ronda per la passeggiata serale.","El Panecillo con la Vergine di Quito: panorama sulla città."]],
 ["Durata e quando",["Giornata intera a ritmo tranquillo: a 2.850 m le salite stancano.","Meglio al mattino, con luce migliore e meno gente."]],
 ["Come arrivare",["Il centro si gira a piedi; per El Panecillo e per il rientro serale usa taxi o app."]],
 ["Consigli",["Strati di vestiti, giacca antipioggia e crema solare: il sole in quota è forte.","Attenzione a borseggi e borse aperte; di sera resta nelle vie frequentate.","Nelle chiese abbigliamento coperto; in alcune non si può fotografare all'interno."]],
 ["Da verificare",["Il 26 aprile è lunedì: molti musei chiudono il lunedì.","Orari e prezzi di chiese, torri e musei."]]]},
-{id:"teleferiqo",t:"TelefériQo",z:"Quito",g:"24 aprile",q:"TelefériQo Quito",s:[
+{id:"teleferiqo",t:"TelefériQo",z:"Quito",g:"26 aprile, mattina",q:"TelefériQo Quito",s:[
 ["Cosa vedi",["Cabinovia sul versante del Pichincha fino a circa 4.000 m: vista su Quito e, con cielo limpido, sui vulcani vicini.","In cima ci sono belvedere e sentieri brevi; la salita alla vetta del Rucu Pichincha è lunga e impegnativa, non adatta ai primi giorni."]],
 ["Durata e quando",["Circa 2–3 ore tra salita, sosta e discesa.","Vai la mattina presto: più tardi le nuvole spesso coprono la vista."]],
 ["Come arrivare",["Taxi o app dal centro, circa 15–20 minuti."]],
 ["Consigli",["È il secondo giorno in quota: sali piano e bevi molta acqua. Con mal di testa o nausea scendi subito.","In cima fa freddo e c'è vento: porta una giacca."]],
 ["Da verificare",["Orari, prezzi e chiusure per manutenzione."]]]},
-{id:"mitad",t:"Mitad del Mundo e Museo Intiñan",z:"Quito",g:"24 aprile",q:"Mitad del Mundo Quito",s:[
+{id:"mitad",t:"Mitad del Mundo e Museo Intiñan",z:"Quito",g:"26 aprile, pomeriggio",q:"Mitad del Mundo Quito",s:[
 ["Cosa vedi",["Monumento alla missione geodetica francese del 1736 che misurò l'equatore; si sale in cima per il panorama.","Il vicino Museo de Sitio Intiñan è più vicino alla linea reale: gli esperimenti con acqua e uovo sono dimostrazioni da spettacolo, non prove scientifiche, ma divertono."]],
 ["Durata e quando",["2–3 ore, a circa 25 km dal centro."]],
 ["Come arrivare",["Taxi con andata e ritorno concordati, oppure tour organizzato; l'autobus pubblico è più lento."]],
 ["Consigli",["Insieme al TelefériQo la giornata è piena: scegli con calma dove fermarti.","Se ti interessa la linea precisa, chiedi dove si trova la vera latitudine zero."]],
 ["Da verificare",["Prezzi di ingresso e orari di apertura."]]]},
-{id:"otavalo",t:"Otavalo e dintorni",z:"Imbabura",g:"25 aprile",q:"Mercado de Otavalo",s:[
+{id:"otavalo",t:"Otavalo e dintorni",z:"Imbabura",g:"24 aprile (sabato)",q:"Mercado de Otavalo",s:[
 ["Cosa vedi",["Plaza de Ponchos: mercato artigianale di tessuti, borse, gioielli e strumenti, tra i più noti del Sudamerica.","Cascata di Peguche, Laguna Cuicocha nel cratere del Cotacachi e Lago San Pablo sono le soste naturalistiche più comuni."]],
-["Durata e quando",["Gita in giornata: circa 2 ore di viaggio per Quito in ciascuna direzione.","Il 25 aprile è domenica, mentre il mercato più grande è di sabato (24 aprile). Valuta di scambiare i giorni 24 e 25."]],
+["Durata e quando",["Gita in giornata: circa 2 ore di viaggio per Quito in ciascuna direzione.","Il 24 aprile è sabato, il giorno del mercato più grande."]],
 ["Come arrivare",["Autobus da Quito (terminal Carcelén), tour in giornata o auto con autista concordato."]],
 ["Consigli",["Contratta con cortesia e porta contanti in piccole banconote.","Parti presto per trovare i banchi montati ed evitare il traffico al ritorno."]],
 ["Da verificare",["Giorni e orari del mercato e durata del viaggio."]]]},
@@ -606,7 +615,7 @@ const LUOGHI=[
 ["Come arrivare",["Da Baltra: autobus, traghetto sul canale di Itabaca, poi autobus o taxi fino a Puerto Ayora, circa 1–1,5 ore in tutto."]],
 ["Consigli",["La carta INGALA si ottiene prima del volo, in aeroporto a Quito; la tassa del Parco si paga all'arrivo a Baltra, in genere in contanti. Tieni i contanti pronti.","Taxi acquatici per raggiungere le barche: chiedi il prezzo prima di salire.","La sera si mangia nei chioschi di calle Charles Binford."]],
 ["Da verificare",["Importi e modalità di pagamento di tassa del Parco e carta INGALA.","Orari e giorni di apertura della Stazione Darwin."]]]},
-{id:"tortuga",t:"Tortuga Bay",z:"Santa Cruz",g:"27 aprile, pomeriggio",q:"Tortuga Bay Santa Cruz Galápagos",s:[
+{id:"tortuga",t:"Tortuga Bay",z:"Santa Cruz",g:"30 aprile",q:"Tortuga Bay Santa Cruz Galápagos",s:[
 ["Cosa vedi",["Playa Brava: spiaggia lunga e selvaggia, con onde forti e correnti; si cammina e si osservano le iguane marine, ma non si nuota.","Playa Mansa: baia riparata, adatta a bagno, snorkeling facile e kayak.","Mangrovie e laguna con piccoli squali pinna nera e uccelli."]],
 ["Durata e quando",["Sentiero lastricato di circa 2,5 km dal paese (45–60 minuti a piedi) fino a Playa Brava; Playa Mansa è poco oltre. In tutto 3–4 ore."]],
 ["Come arrivare",["A piedi dall'inizio del sentiero in paese; il taxi arriva solo fino all'ingresso. Registrazione all'ingresso."]],
@@ -626,7 +635,7 @@ const LUOGHI=[
 ["Cosa portare",["Costume, asciugamano, crema, scarpe chiuse, cappello, giacca leggera per la barca e, se serve, una pastiglia contro il mal di mare."]],
 ["Consigli",["Se soffri il mare, prendi la pastiglia 30–60 minuti prima della partenza.","Resta sui percorsi: lo sbarco avviene da un molo e non si cammina fuori dai sentieri."]],
 ["Da verificare",["Prezzo, durata reale del trasferimento e attrezzatura inclusa (muta, maschera)."]]]},
-{id:"altopiano",t:"Altopiano di Santa Cruz: tartarughe e tunnel di lava",z:"Santa Cruz",g:"30 aprile",q:"Reserva El Chato Santa Cruz Galápagos",s:[
+{id:"altopiano",t:"Altopiano di Santa Cruz: tartarughe e tunnel di lava",z:"Santa Cruz",g:"27 aprile, sulla strada da Baltra",q:"Reserva El Chato Santa Cruz Galápagos",s:[
 ["Cosa vedi",["Tartarughe giganti libere nelle riserve private di El Chato e Rancho Primicias, nell'altopiano umido (spesso si prestano gli stivali di gomma).","Tunnel di lava lunghi centinaia di metri, da percorrere a piedi con una torcia.","Los Gemelos: due crateri da sprofondamento nel bosco di Scalesia, accesso libero."]],
 ["Durata e quando",["Mezza giornata, circa 3–4 ore con i trasferimenti."]],
 ["Come arrivare",["Taxi con attesa o tour di mezza giornata da Puerto Ayora: circa 30–40 minuti di strada."]],
@@ -667,7 +676,7 @@ LUOGHI.push(
 ["Biglietti e permessi",["Il Parco richiede la tassa d'ingresso e la carta di controllo transito INGALA: importi e modalità vanno controllati sui siti ufficiali."]]]}
 );
 LUOGHI.splice(LUOGHI.findIndex(l=>l.id==="regole"),0,
-{id:"grietas",t:"Las Grietas",z:"Santa Cruz",g:"Opzionale",q:"Las Grietas Santa Cruz Galápagos",s:[
+{id:"grietas",t:"Las Grietas",z:"Santa Cruz",g:"30 aprile",q:"Las Grietas Santa Cruz Galápagos",s:[
 ["Cosa vedi",["Fessura profonda tra pareti di roccia vulcanica, con acqua limpida verde-azzurra, mista di acqua dolce e salata: si fa il bagno e si può fare snorkeling.","Il percorso passa da Playa de los Alemanes e dalle saline, dove si vedono uccelli e iguane marine."]],
 ["Durata e quando",["Mezza giornata, circa 2–3 ore. Si inserisce bene nel pomeriggio del 30 aprile, dopo l'altopiano; meglio con luce e meno gente."]],
 ["Come arrivare",["Taxi acquatico dal molo di Puerto Ayora fino all'approdo di Punta Estrada, poi circa 15–20 minuti a piedi su sentiero e rocce."]],
@@ -714,7 +723,7 @@ $("tab").addEventListener("click",e=>{
   ["oggi","altro","album","programma","luoghi","mappa","prepara","diario","voli","alberghi","prenotazioni","documenti","costi","checklist","info"].forEach(n=>$("s-"+n).hidden=n!==t);
   scrollTo(0,0);
 });
-{const PINS=[{"id": "centro", "t": "Centro Storico di Quito", "g": "26 aprile", "a": "q", "p": [-0.2202, -78.5123]}, {"id": "teleferiqo", "t": "TelefériQo", "g": "24 aprile", "a": "q", "p": [-0.1925, -78.519]}, {"id": "mitad", "t": "Mitad del Mundo", "g": "24 aprile", "a": "q", "p": [-0.0022, -78.4558]}, {"id": "otavalo", "t": "Otavalo", "g": "25 aprile", "a": "q", "p": [0.2342, -78.2612]}, {"id": "ayora", "t": "Puerto Ayora e Stazione Darwin", "g": "27 aprile", "a": "g", "p": [-0.7436, -90.3028]}, {"id": "tortuga", "t": "Tortuga Bay", "g": "27 aprile", "a": "g", "p": [-0.766, -90.34]}, {"id": "seymour", "t": "Seymour Norte", "g": "28 aprile", "a": "g", "p": [-0.3985, -90.282]}, {"id": "bartolome", "t": "Bartolomé", "g": "29 aprile", "a": "g", "p": [-0.286, -90.547]}, {"id": "altopiano", "t": "Altopiano di Santa Cruz", "g": "30 aprile", "a": "g", "p": [-0.672, -90.326]}, {"id": "isabela", "t": "Isabela (Puerto Villamil)", "g": "Opzionale", "a": "g", "p": [-0.9553, -90.9657]}, {"id": "grietas", "t": "Las Grietas", "g": "Opzionale", "a": "g", "p": [-0.7505, -90.3105]}, {"id": "garrapatero", "t": "El Garrapatero", "g": "Opzionale", "a": "g", "p": [-0.6866, -90.2234]}, {"t": "Aeroporto di Quito", "a": "q", "x": 1, "p": [-0.1292, -78.3576]}, {"t": "Aeroporto di Baltra", "a": "g", "x": 1, "p": [-0.4538, -90.2659]}];
+{const PINS=[{"id": "centro", "t": "Centro Storico di Quito", "g": "25 aprile", "a": "q", "p": [-0.2202, -78.5123]}, {"id": "teleferiqo", "t": "TelefériQo", "g": "26 aprile", "a": "q", "p": [-0.1925, -78.519]}, {"id": "mitad", "t": "Mitad del Mundo", "g": "26 aprile", "a": "q", "p": [-0.0022, -78.4558]}, {"id": "otavalo", "t": "Otavalo", "g": "24 aprile", "a": "q", "p": [0.2342, -78.2612]}, {"id": "ayora", "t": "Puerto Ayora e Stazione Darwin", "g": "27 aprile", "a": "g", "p": [-0.7436, -90.3028]}, {"id": "tortuga", "t": "Tortuga Bay", "g": "30 aprile", "a": "g", "p": [-0.766, -90.34]}, {"id": "seymour", "t": "Seymour Norte", "g": "28 aprile", "a": "g", "p": [-0.3985, -90.282]}, {"id": "bartolome", "t": "Bartolomé", "g": "29 aprile", "a": "g", "p": [-0.286, -90.547]}, {"id": "altopiano", "t": "Altopiano di Santa Cruz", "g": "27 aprile", "a": "g", "p": [-0.672, -90.326]}, {"id": "isabela", "t": "Isabela (Puerto Villamil)", "g": "Opzionale", "a": "g", "p": [-0.9553, -90.9657]}, {"id": "grietas", "t": "Las Grietas", "g": "30 aprile", "a": "g", "p": [-0.7505, -90.3105]}, {"id": "garrapatero", "t": "El Garrapatero", "g": "Opzionale", "a": "g", "p": [-0.6866, -90.2234]}, {"t": "Aeroporto di Quito", "a": "q", "x": 1, "p": [-0.1292, -78.3576]}, {"t": "Aeroporto di Baltra", "a": "g", "x": 1, "p": [-0.4538, -90.2659]}];
 let M=null,layer=null,area="q";
 const caricaL=cb=>{
   if(window.L)return cb();
@@ -845,7 +854,7 @@ $("rf").onchange=async e=>{
   $("fsr").onclick=()=>setFs(16);
   ag();
 }
-const VER="26";$("ver").textContent=VER;
+const VER="27";$("ver").textContent=VER;
 $("upd").onclick=async()=>{try{for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister();for(const k of await caches.keys())await caches.delete(k)}catch(e){}location.reload()};
 {
   const el=$("s-album"),c=collection(db,"viaggi",CODE,"specie"),op=new Set(),MIL=[[5,"Esploratore"],[10,"Osservatore"],[20,"Naturalista"],[30,"Darwin"]];
