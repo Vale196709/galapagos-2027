@@ -111,7 +111,7 @@ select{width:100%;margin-top:3px;padding:9px 10px;border:1px solid var(--line);b
   <p class="sub">23 aprile – 3 maggio</p>
   <div class="bar"><span id="conto"></span><button class="lnk" id="cod" type="button">Codice</button><span id="stato"><i></i><span>Connessione…</span></span></div>
 </header>
-<nav id="tab"><button data-t="oggi" aria-selected="true">Oggi</button><button data-t="programma" aria-selected="false">Programma</button><button data-t="luoghi" aria-selected="false">Luoghi</button><button data-t="mappa" aria-selected="false">Mappa</button><button hidden data-t="voli" aria-selected="false">Voli</button><button hidden data-t="alberghi" aria-selected="false">Alberghi</button><button hidden data-t="costi" aria-selected="false">Costi</button><button hidden data-t="checklist" aria-selected="false">Checklist</button><button hidden data-t="prepara" aria-selected="false">Prepara</button><button hidden data-t="info" aria-selected="false">Info</button><button hidden data-t="diario" aria-selected="false">Diario</button><button hidden data-t="album" aria-selected="false">Album</button><button data-t="altro" aria-selected="false">Altro</button></nav>
+<nav id="tab"><button data-t="oggi" aria-selected="true">Oggi</button><button data-t="programma" aria-selected="false">Programma</button><button data-t="luoghi" aria-selected="false">Luoghi</button><button data-t="mappa" aria-selected="false">Mappa</button><button hidden data-t="voli" aria-selected="false">Voli</button><button hidden data-t="alberghi" aria-selected="false">Alberghi</button><button hidden data-t="prenotazioni" aria-selected="false">Prenotazioni</button><button hidden data-t="costi" aria-selected="false">Costi</button><button hidden data-t="checklist" aria-selected="false">Checklist</button><button hidden data-t="prepara" aria-selected="false">Prepara</button><button hidden data-t="info" aria-selected="false">Info</button><button hidden data-t="diario" aria-selected="false">Diario</button><button hidden data-t="album" aria-selected="false">Album</button><button data-t="altro" aria-selected="false">Altro</button></nav>
 <main>
 <section id="s-oggi" class="og"></section>
 <section id="s-programma" hidden><div id="lista" class="vuoto">Caricamento…</div></section>
@@ -148,10 +148,11 @@ select{width:100%;margin-top:3px;padding:9px 10px;border:1px solid var(--line);b
 </div>
 </section>
 <section id="s-diario" class="sec" hidden></section>
-<section id="s-altro" hidden><div class="menu"><button data-go="voli" type="button">Voli<small>Orari, codici e prenotazioni</small></button><button data-go="alberghi" type="button">Alberghi<small>Check-in, check-out e contatti</small></button><button data-go="costi" type="button">Costi<small>Spese e totale</small></button><button data-go="checklist" type="button">Checklist<small>Cose da fare e da portare</small></button><button data-go="prepara" type="button">Prepara<small>Scadenze, clima e valigia, contanti e mance</small></button><button data-go="info" type="button">Info<small>Contatti, orari, frasi, backup e calendario</small></button><button data-go="diario" type="button">Diario<small>Com'è andata, giorno per giorno</small></button><button data-go="album" type="button">Album delle specie<small>Avvistamenti e traguardi</small></button></div></section>
+<section id="s-altro" hidden><div class="menu"><button data-go="voli" type="button">Voli<small>Orari, codici e prenotazioni</small></button><button data-go="alberghi" type="button">Alberghi<small>Check-in, check-out e contatti</small></button><button data-go="prenotazioni" type="button">Prenotazioni ed escursioni<small>Escursioni, transfer e stato di ogni prenotazione</small></button><button data-go="costi" type="button">Costi<small>Spese e totale</small></button><button data-go="checklist" type="button">Checklist<small>Cose da fare e da portare</small></button><button data-go="prepara" type="button">Prepara<small>Scadenze, clima e valigia, contanti e mance</small></button><button data-go="info" type="button">Info<small>Contatti, orari, frasi, backup e calendario</small></button><button data-go="diario" type="button">Diario<small>Com'è andata, giorno per giorno</small></button><button data-go="album" type="button">Album delle specie<small>Avvistamenti e traguardi</small></button></div></section>
 <section id="s-album" class="sec" hidden></section>
 <section id="s-voli" class="sec" hidden></section>
 <section id="s-alberghi" class="sec" hidden></section>
+<section id="s-prenotazioni" class="sec" hidden><p class="nota" style="color:var(--mute);font-size:.85rem;margin:12px 0 0">Escursioni, transfer e traghetti. Lo stato di voli e alberghi si imposta nelle rispettive schede; i prezzi vanno nella scheda Costi.</p><div id="pren-l"></div></section>
 <section id="s-costi" class="sec" hidden></section>
 <section id="s-checklist" class="sec" hidden></section>
 <section id="s-info" hidden>
@@ -313,20 +314,21 @@ onSnapshot(col,{includeMetadataChanges:true},s=>{
 },e=>{$("lista").className="vuoto";$("lista").textContent="Errore di accesso ai dati: "+e.code});
 
 const fmt=d=>d?d.slice(8)+"/"+d.slice(5,7):"";
+const STATI=["Da definire","Da prenotare","Prenotato","Pagato"],stb=g=>g.stato&&g.stato!=="Da definire"?g.stato:"";
 const SEZ={
 voli:{k:"data",vuoto:"Nessun volo salvato.",nuovo:"Aggiungi volo",
- campi:[["tratta","Tratta","text"],["data","Data","date"],["volo","Compagnia e numero volo","text"],["partenza","Partenza (ora)","time"],["arrivo","Arrivo (ora)","time"],["codice","Codice prenotazione","text"],["note","Note","area"]],
+ campi:[["tratta","Tratta","text"],["data","Data","date"],["volo","Compagnia e numero volo","text"],["partenza","Partenza (ora)","time"],["arrivo","Arrivo (ora)","time"],["codice","Codice prenotazione","text"],["stato","Stato prenotazione",STATI],["note","Note","area"]],
  tit:g=>g.tratta||"Volo da inserire",
- riga:g=>[fmt(g.data),g.volo,(g.partenza||g.arrivo)?`${g.partenza||"?"} → ${g.arrivo||"?"}`:""].filter(Boolean).join(" · "),
+ riga:g=>[fmt(g.data),g.volo,(g.partenza||g.arrivo)?`${g.partenza||"?"} → ${g.arrivo||"?"}`:"",stb(g)].filter(Boolean).join(" · "),
  seed:[
  {tratta:"Roma → Quito (via Madrid)",data:"2027-04-23",partenza:"07:35",arrivo:"16:10",note:"Scalo a Madrid di 1h50."},
  {tratta:"Quito → Baltra",data:"2027-04-27",volo:"Avianca AV1688",partenza:"09:15",arrivo:"10:30",note:"Costo circa 129 €."},
  {tratta:"Baltra → Quito",data:"2027-05-01",note:"Da scegliere. Avianca AV1683 11:35→16:10, AV1631 12:40→17:15. LATAM LA1420 10:45→15:09, LA1418 13:14→17:33."},
  {tratta:"Quito → Roma (via Madrid)",data:"2027-05-02",volo:"IB138",partenza:"18:00",arrivo:"15:30",note:"Arrivo a Fiumicino il 3 maggio. Scalo a Madrid di circa 2 ore."}]},
 alberghi:{k:"checkin",vuoto:"Nessun albergo salvato.",nuovo:"Aggiungi albergo",
- campi:[["nome","Nome","text"],["localita","Località","text"],["indirizzo","Indirizzo","text"],["checkin","Check-in","date"],["checkout","Check-out","date"],["codice","Codice prenotazione","text"],["telefono","Telefono","text"],["note","Note","area"]],
+ campi:[["nome","Nome","text"],["localita","Località","text"],["indirizzo","Indirizzo","text"],["checkin","Check-in","date"],["checkout","Check-out","date"],["codice","Codice prenotazione","text"],["telefono","Telefono","text"],["stato","Stato prenotazione",STATI],["note","Note","area"]],
  tit:g=>g.nome||"Albergo da inserire",
- riga:g=>[g.localita,(g.checkin||g.checkout)?`${fmt(g.checkin)||"?"} → ${fmt(g.checkout)||"?"}`:""].filter(Boolean).join(" · "),
+ riga:g=>[g.localita,(g.checkin||g.checkout)?`${fmt(g.checkin)||"?"} → ${fmt(g.checkout)||"?"}`:"",stb(g)].filter(Boolean).join(" · "),
  seed:[{localita:"Quito",checkin:"2027-04-23",checkout:"2027-04-27"},{localita:"Puerto Ayora (Santa Cruz)",checkin:"2027-04-27",checkout:"2027-05-01"},{localita:"Quito",checkin:"2027-05-01",checkout:"2027-05-02"}]},
 costi:{vuoto:"Nessuna spesa salvata.",nuovo:"Aggiungi spesa",
  campi:[["voce","Voce","text"],["importo","Importo","num"],["valuta","Valuta",["EUR","USD"]],["data","Data","date"],["pagato","Già pagato","chk"],["note","Note","area"]],
@@ -363,10 +365,25 @@ SEZ.diario={k:"data",vuoto:"Nessuna pagina di diario.",nuovo:"Aggiungi pagina",
  tit:g=>g.titolo||(g.data?fmt(g.data):"Pagina da compilare"),
  riga:g=>g.data?fmt(g.data):"",
  seed:[{"data": "2027-04-23", "titolo": "Giorno 1"}, {"data": "2027-04-24", "titolo": "Giorno 2"}, {"data": "2027-04-25", "titolo": "Giorno 3"}, {"data": "2027-04-26", "titolo": "Giorno 4"}, {"data": "2027-04-27", "titolo": "Giorno 5"}, {"data": "2027-04-28", "titolo": "Giorno 6"}, {"data": "2027-04-29", "titolo": "Giorno 7"}, {"data": "2027-04-30", "titolo": "Giorno 8"}, {"data": "2027-05-01", "titolo": "Giorno 9"}, {"data": "2027-05-02", "titolo": "Giorno 10"}, {"data": "2027-05-03", "titolo": "Giorno 11"}]};
+SEZ.prenotazioni={k:"data",el:"pren-l",vuoto:"Nessuna prenotazione salvata.",nuovo:"Aggiungi prenotazione",
+ campi:[["cosa","Cosa","text"],["tipo","Tipo",["Escursione","Transfer","Traghetto","Ingresso","Altro"]],["data","Data","date"],["ora","Ora di ritrovo (locale)","time"],["ritrovo","Punto di ritrovo","text"],["operatore","Operatore o agenzia","text"],["telefono","Telefono operatore","tel"],["codice","Codice prenotazione","text"],["stato","Stato",STATI.slice(1)],["pagamento","Pagamento (acconto, saldo sul posto, contanti…)","text"],["note","Note (cosa portare, cosa è incluso)","area"]],
+ tit:g=>({Escursione:"⛵",Transfer:"🚕",Traghetto:"⛴",Ingresso:"🎟"}[g.tipo]||"📌")+" "+(g.cosa||"Prenotazione da inserire"),
+ riga:g=>[g.data?fmt(g.data):"Data da fissare",g.ora,g.stato||"Da prenotare"].filter(Boolean).join(" · "),
+ azioni:g=>g.telefono?`<a class="call" href="tel:${esc(g.telefono.replace(/[^+\d]/g,""))}">Chiama ${esc(g.operatore||g.telefono)}</a>`:"",
+ piede:d=>{if(!d.length)return"";const n=x=>d.filter(g=>(g.stato||"Da prenotare")===x).length;return `<div class="piede">${n("Da prenotare")} da prenotare · ${n("Prenotato")} prenotate · ${n("Pagato")} pagate</div>`},
+ seed:[{cosa:"Taxi aeroporto di Quito → albergo",tipo:"Transfer",data:"2027-04-23",note:"Arrivo previsto alle 16:10. Chiedere all'albergo se offre il servizio."},
+ {cosa:"Escursione a Otavalo",tipo:"Escursione",data:"2027-04-25",note:"Il mercato grande è il sabato (24 aprile): valutare lo scambio dei giorni."},
+ {cosa:"Taxi albergo → aeroporto di Quito",tipo:"Transfer",data:"2027-04-27",note:"Volo AV1688 alle 09:15: in aeroporto circa 2 ore prima per carta INGALA e controllo bagagli."},
+ {cosa:"Baltra → Puerto Ayora",tipo:"Transfer",data:"2027-04-27",ritrovo:"Aeroporto di Baltra",pagamento:"Contanti: bus, traghettino del canale Itabaca e taxi",note:"In alternativa taxi con sosta a El Chato (tartarughe giganti e tunnel di lava), che è sulla strada."},
+ {cosa:"Seymour Norte",tipo:"Escursione",data:"2027-04-28",note:"Posti limitati e partenze non tutti i giorni: prenotare presto. Prezzi indicativi 230–380 $."},
+ {cosa:"Bartolomé",tipo:"Escursione",data:"2027-04-29",note:"Posti limitati e partenze non tutti i giorni: prenotare presto. Prezzi indicativi 245–380 $."},
+ {cosa:"Altopiano: El Chato o Primicias",tipo:"Ingresso",data:"2027-04-30",pagamento:"Ingresso in contanti",note:"Si raggiunge in taxi da Puerto Ayora: concordare andata, attesa e ritorno."},
+ {cosa:"Puerto Ayora → Baltra",tipo:"Transfer",data:"2027-05-01",note:"Servono circa 1–1,5 ore tra taxi, traghettino e bus: partire con largo margine sul volo."},
+ {cosa:"Taxi albergo → aeroporto di Quito",tipo:"Transfer",data:"2027-05-02",note:"Volo IB138 alle 18:00: partire verso le 13:00–13:30."}]};
 const VAL=["Passaporto e copie dei documenti (anche in digitale)", "Assicurazione di viaggio con numero di assistenza", "Contanti in dollari USA, in banconote piccole", "Pile o felpa per la sera", "Giacca antipioggia", "Scarpe comode per le salite a 2.850 m", "Costume e abiti leggeri, meglio con maniche lunghe", "Cappello e occhiali da sole", "Scarpe da acqua e scarpe da trekking leggere", "Crema solare adatta alla vita marina", "Maschera e boccaglio", "Custodia stagna per il telefono", "Torcia o frontale", "Borraccia riutilizzabile", "Adattatore per prese americane (tipo A/B)", "Power bank", "Farmaci personali e kit di primo soccorso", "Pastiglie contro il mal di mare", "Repellente per insetti"];
 const campoHtml=([k,l,t],g)=>Array.isArray(t)?`<label>${l}<select data-k="${k}">${t.map(o=>`<option ${(g[k]||t[0])===o?"selected":""}>${o}</option>`).join("")}</select></label>`:t==="chk"?`<label class="ck"><input type="checkbox" data-k="${k}" ${g[k]?"checked":""}> ${l}</label>`:t==="num"?`<label>${l}<input type="number" inputmode="decimal" step="any" data-k="${k}" value="${g[k]??""}"></label>`:t==="area"?`<label>${l}<textarea data-k="${k}">${esc(g[k])}</textarea></label>`:`<label>${l}<input type="${t}" data-k="${k}" value="${esc(g[k])}"></label>`;
 for(const [nome,S] of Object.entries(SEZ)){
-  const el=$("s-"+nome),c=collection(db,"viaggi",CODE,nome),op=new Set(),vuota=()=>Object.fromEntries(S.campi.map(f=>[f[0],f[2]==="chk"?false:""]));
+  const el=$(S.el||("s-"+nome)),c=collection(db,"viaggi",CODE,nome),op=new Set(),vuota=()=>Object.fromEntries(S.campi.map(f=>[f[0],f[2]==="chk"?false:""]));
   let dd=[],sp=false;
   const draw=()=>{
     el.innerHTML=(S.piede?S.piede(dd):"")+(dd.length?dd.map(g=>`<details data-id="${g.id}" ${op.has(g.id)?"open":""}><summary>${esc(S.tit(g))}<span class="riga">${esc(S.riga(g))}</span></summary>${S.campi.map(f=>campoHtml(f,g)).join("")}${S.azioni?S.azioni(g):""}<button class="del" data-del="${g.id}">Elimina</button></details>`).join(""):`<p class="vuoto">${S.vuoto}</p><p class="vuoto"><button data-seed>Carica dall'itinerario</button></p>`)+`<p><button data-add>${S.nuovo}</button></p>`;
@@ -458,6 +475,8 @@ function prossimoEvento(){
   (STORE.alberghi||[]).forEach(a=>{const n=(a.nome||"Albergo")+(a.localita?" — "+a.localita:""),z=/ayora|santa cruz|isabela|villamil|gal[aá]pagos|baltra/i.test(a.localita||"")?"g":"q";
     if(a.checkin)ev.push({t:ep(a.checkin,"15:00",z),i:"🏨",n:"Check-in: "+n,d:a.checkin,g:true});
     if(a.checkout)ev.push({t:ep(a.checkout,"11:00",z),i:"🏨",n:"Check-out: "+n,d:a.checkout,g:true})});
+  (STORE.prenotazioni||[]).forEach(p=>{if(!p.data)return;const ok=/^\d\d:\d\d$/.test(p.ora||""),z=p.data>="2027-04-27"&&p.data<="2027-05-01"&&!/quito/i.test((p.cosa||"")+" "+(p.ritrovo||""))?"g":"q";
+    ev.push({t:ep(p.data,ok?p.ora:"",z),i:({Escursione:"⛵",Transfer:"🚕",Traghetto:"⛴",Ingresso:"🎟"}[p.tipo]||"📌"),n:p.cosa||"Prenotazione",d:p.data,h:ok?p.ora:"",x:p.ritrovo||"",g:!ok})});
   const now=Date.now(),e=ev.filter(x=>x.t+(x.g?864e5:0)>now).sort((a,b)=>a.t-b.t)[0];
   if(!e)return"";
   const df=e.t-now,gg=Math.floor(df/864e5),hh=Math.floor((df%864e5)/36e5),
@@ -515,7 +534,11 @@ function renderOggi(){
     co.forEach(a=>h+=`<div class="blk r"><p class="m">Check-out oggi</p>${alloggio(a)}</div>`);
     ci.forEach(a=>h+=`<div class="blk r"><p class="m">Check-in oggi</p>${alloggio(a)}</div>`);
     notte.filter(a=>a.checkin!==giorno).forEach(a=>h+=`<div class="blk"><p class="m">Notte</p>${alloggio(a)}</div>`);}
+  const pr=(STORE.prenotazioni||[]).filter(x=>x.data===giorno).sort((a,b)=>(a.ora||"~").localeCompare(b.ora||"~"));
+  if(pr.length)h+="<h3>Prenotazioni</h3>"+pr.map(x=>`<div class="blk r"><p><b>${esc(x.cosa||"Prenotazione")}</b></p><p>${esc([x.ora&&"Ritrovo "+x.ora,x.ritrovo,x.operatore].filter(Boolean).join(" · "))}</p><p class="m">${esc([x.stato||"Da prenotare",x.codice&&"Prenotazione: "+x.codice,x.pagamento].filter(Boolean).join(" · "))}</p>${x.note?`<p class="m">${esc(x.note)}</p>`:""}${x.telefono?`<p><a class="call" href="tel:${esc(x.telefono.replace(/[^+\d]/g,""))}">Chiama ${esc(x.operatore||x.telefono)}</a></p>`:""}</div>`).join("");
   h+=specieOggi(giorno);
+  const dp=[...(STORE.voli||[]).filter(x=>x.stato==="Da prenotare").map(x=>"✈ "+(x.tratta||"Volo")),...(STORE.alberghi||[]).filter(x=>x.stato==="Da prenotare").map(x=>"🏨 "+(x.nome||x.localita||"Albergo")),...(STORE.prenotazioni||[]).filter(x=>(x.stato||"Da prenotare")==="Da prenotare").map(x=>(x.data?fmt(x.data)+" ":"")+(x.cosa||"Prenotazione"))];
+  if(dp.length&&hoy<P)h+=`<h3>Da prenotare (${dp.length})</h3>`+dp.slice(0,6).map(x=>`<p>• ${esc(x)}</p>`).join("")+(dp.length>6?`<p class="m">… e altre ${dp.length-6} in Altro → Prenotazioni</p>`:"");
   if(todo.length)h+=`<h3>Ancora da fare (${todo.length})</h3>`+todo.slice(0,6).map(x=>`<p>• ${esc(x.voce)}</p>`).join("")+(todo.length>6?`<p class="m">… e altre ${todo.length-6} nella Checklist</p>`:"");
   el.innerHTML=h;const cs=el.querySelector(".chips"),on=cs&&cs.querySelector(".on");if(on)cs.scrollLeft=on.offsetLeft-cs.clientWidth/2+on.offsetWidth/2;
 }
@@ -663,7 +686,7 @@ LUOGHI.forEach(l=>{const x=EXTRA2[l.id];if(x){const i=l.s.findIndex(a=>a[0]==="D
 $("tab").addEventListener("click",e=>{
   const t=e.target.dataset.t;if(!t)return;
   document.querySelectorAll("#tab button").forEach(b=>b.setAttribute("aria-selected",b.dataset.t===t));
-  ["oggi","altro","album","programma","luoghi","mappa","prepara","diario","voli","alberghi","costi","checklist","info"].forEach(n=>$("s-"+n).hidden=n!==t);
+  ["oggi","altro","album","programma","luoghi","mappa","prepara","diario","voli","alberghi","prenotazioni","costi","checklist","info"].forEach(n=>$("s-"+n).hidden=n!==t);
   scrollTo(0,0);
 });
 {const PINS=[{"id": "centro", "t": "Centro Storico di Quito", "g": "26 aprile", "a": "q", "p": [-0.2202, -78.5123]}, {"id": "teleferiqo", "t": "TelefériQo", "g": "24 aprile", "a": "q", "p": [-0.1925, -78.519]}, {"id": "mitad", "t": "Mitad del Mundo", "g": "24 aprile", "a": "q", "p": [-0.0022, -78.4558]}, {"id": "otavalo", "t": "Otavalo", "g": "25 aprile", "a": "q", "p": [0.2342, -78.2612]}, {"id": "ayora", "t": "Puerto Ayora e Stazione Darwin", "g": "27 aprile", "a": "g", "p": [-0.7436, -90.3028]}, {"id": "tortuga", "t": "Tortuga Bay", "g": "27 aprile", "a": "g", "p": [-0.766, -90.34]}, {"id": "seymour", "t": "Seymour Norte", "g": "28 aprile", "a": "g", "p": [-0.3985, -90.282]}, {"id": "bartolome", "t": "Bartolomé", "g": "29 aprile", "a": "g", "p": [-0.286, -90.547]}, {"id": "altopiano", "t": "Altopiano di Santa Cruz", "g": "30 aprile", "a": "g", "p": [-0.672, -90.326]}, {"id": "isabela", "t": "Isabela (Puerto Villamil)", "g": "Opzionale", "a": "g", "p": [-0.9553, -90.9657]}, {"id": "grietas", "t": "Las Grietas", "g": "Opzionale", "a": "g", "p": [-0.7505, -90.3105]}, {"id": "garrapatero", "t": "El Garrapatero", "g": "Opzionale", "a": "g", "p": [-0.6866, -90.2234]}, {"t": "Aeroporto di Quito", "a": "q", "x": 1, "p": [-0.1292, -78.3576]}, {"t": "Aeroporto di Baltra", "a": "g", "x": 1, "p": [-0.4538, -90.2659]}];
@@ -705,6 +728,7 @@ $("pr").onclick=()=>{
   let h="<h1>Galápagos 2027</h1><p>23 aprile – 3 maggio 2027</p><h2>Programma</h2>"+(S.giorni||[]).map(g=>`<div class="pg"><b>${D(g.data)} — ${e(g.titolo)}</b>${R(g,"attivita")}${g.alloggio?`<br>Alloggio: ${e(g.alloggio)}`:""}${g.trasporti?`<br>Trasporti: ${e(g.trasporti)}`:""}${g.note?`<br>Note: ${e(g.note)}`:""}</div>`).join("");
   h+="<h2>Voli</h2>"+(S.voli||[]).map(v=>`<div class="pg"><b>${D(v.data)} — ${e(v.tratta)}</b><br>${e([v.volo,(v.partenza||v.arrivo)?`${v.partenza||"?"} → ${v.arrivo||"?"}`:"",v.codice?"Prenotazione "+v.codice:""].filter(Boolean).join(" · "))}${R(v,"note")}</div>`).join("");
   h+="<h2>Alberghi</h2>"+(S.alberghi||[]).map(a=>`<div class="pg"><b>${e(a.nome||"Albergo da inserire")}</b> — ${e(a.localita)}<br>${D(a.checkin)} → ${D(a.checkout)}${R(a,"indirizzo")}${a.codice?`<br>Prenotazione: ${e(a.codice)}`:""}${a.telefono?`<br>Tel: ${e(a.telefono)}`:""}${R(a,"note")}</div>`).join("");
+  h+="<h2>Prenotazioni</h2>"+(S.prenotazioni||[]).map(p=>`<div class="pg"><b>${D(p.data)}${p.ora?" "+e(p.ora):""} — ${e(p.cosa)}</b><br>${e([p.stato||"Da prenotare",p.ritrovo,p.operatore,p.telefono,p.codice&&"Prenotazione "+p.codice,p.pagamento].filter(Boolean).join(" · "))}${R(p,"note")}</div>`).join("");
   h+="<h2>Contatti</h2>"+(S.contatti||[]).map(c=>`<div class="pg"><b>${e(c.nome)}</b> ${e(c.telefono)}${R(c,"note")}</div>`).join("");
   $("stampa").innerHTML=h;window.print();
 };
@@ -730,6 +754,11 @@ $("ics").onclick=async()=>{
     else tutto("v"+v.id,v.data,"✈ "+(tr||"Volo"),d)});
   (S.alberghi||[]).forEach(a=>{const n=(a.nome||"Albergo")+(a.localita?" — "+a.localita:""),d=[a.indirizzo,a.codice&&"Prenotazione: "+a.codice,a.telefono&&"Tel: "+a.telefono].filter(Boolean).join("\n");
     tutto("ci"+a.id,a.checkin,"Check-in: "+n,d);tutto("co"+a.id,a.checkout,"Check-out: "+n,d)});
+  (S.prenotazioni||[]).forEach(p=>{if(!p.data)return;const t=/^\d\d:\d\d$/.test(p.ora||"")?p.ora.replace(":",""):null,
+    tz=p.data>="2027-04-27"&&p.data<="2027-05-01"&&!/quito/i.test((p.cosa||"")+" "+(p.ritrovo||""))?"Pacific/Galapagos":"America/Guayaquil",
+    d=[p.ritrovo&&"Ritrovo: "+p.ritrovo,p.operatore&&"Operatore: "+p.operatore,p.telefono&&"Tel: "+p.telefono,p.codice&&"Prenotazione: "+p.codice,p.pagamento,p.note].filter(Boolean).join("\n");
+    if(t)ev("p"+p.id,p.cosa||"Prenotazione",d,[`DTSTART;TZID=${tz}:${D(p.data)}T${t}00`,"DURATION:PT2H","BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:Ritrovo","TRIGGER:-PT1H","END:VALARM"]);
+    else tutto("p"+p.id,p.data,p.cosa||"Prenotazione",d)});
   await inviaFile(new File(["BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Galapagos 2027//IT\r\nCALSCALE:GREGORIAN\r\n"+out.join("\r\n")+"\r\nEND:VCALENDAR\r\n"],"galapagos-2027.ics",{type:"text/calendar"}));
 };
 const PRIM=["oggi","programma","luoghi","mappa","altro"];
@@ -739,7 +768,7 @@ $("rp").onclick=()=>$("rf").click();
 $("rf").onchange=async e=>{
   const f=e.target.files[0];if(!f)return;const b=$("rp");
   try{
-    const J=JSON.parse(await f.text()),COL=["giorni","voli","alberghi","costi","checklist","contatti","scadenze","diario"],ID=/^[A-Za-z0-9_-]{1,40}$/,FK=/^[A-Za-z_][A-Za-z0-9_]{0,30}$/,ops=[];
+    const J=JSON.parse(await f.text()),COL=["giorni","voli","alberghi","prenotazioni","costi","checklist","contatti","scadenze","diario"],ID=/^[A-Za-z0-9_-]{1,40}$/,FK=/^[A-Za-z_][A-Za-z0-9_]{0,30}$/,ops=[];
     COL.forEach(n=>(Array.isArray(J[n])?J[n]:[]).forEach(x=>{if(!x||!ID.test(x.id||""))return;const d={};for(const [k,v] of Object.entries(x))if(k!=="id"&&FK.test(k)&&["string","number","boolean"].includes(typeof v))d[k]=v;ops.push([n,x.id,d])}));
     if(J.luoghi&&typeof J.luoghi==="object")for(const [id,v] of Object.entries(J.luoghi))if(ID.test(id)&&typeof v==="string")ops.push(["luoghi",id,{note:v}]);
     if(J.specie&&typeof J.specie==="object")for(const [id,v] of Object.entries(J.specie))if(ID.test(id)&&v&&typeof v==="object")ops.push(["specie",id,{visto:!!v.visto,note:String(v.note||""),data:String(v.data||"")}]);
@@ -761,7 +790,7 @@ $("rf").onchange=async e=>{
   $("fsr").onclick=()=>setFs(16);
   ag();
 }
-const VER="21";$("ver").textContent=VER;
+const VER="22";$("ver").textContent=VER;
 $("upd").onclick=async()=>{try{for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister();for(const k of await caches.keys())await caches.delete(k)}catch(e){}location.reload()};
 {
   const el=$("s-album"),c=collection(db,"viaggi",CODE,"specie"),op=new Set(),MIL=[[5,"Esploratore"],[10,"Osservatore"],[20,"Naturalista"],[30,"Darwin"]];
